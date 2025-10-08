@@ -1,0 +1,154 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Distribution / Packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+*.manifest
+*.spec
+
+# Logs
+pip-log.txt
+pip-delete-this-directory.txt
+*.log
+
+# Testing / Coverage
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# Translations
+*.mo
+*.pot
+
+# Frameworks
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+instance/
+.webassets-cache
+.scrapy
+
+# Documentation
+docs/_build/
+/site
+
+# Build Tools
+.pybuilder/
+target/
+
+# Jupyter / IPython
+.ipynb_checkpoints
+profile_default/
+ipython_config.py
+
+# Dependency Managers
+Pipfile.lock
+uv.lock
+poetry.lock
+.pdm.toml
+.pdm-python
+.pdm-build/
+__pypackages__/
+
+# Task Queues
+celerybeat-schedule
+celerybeat.pid
+
+# Misc Python
+*.sage.py
+
+# Virtual Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDEs
+
+# VSCode
+.vscode/*
+
+# Type Checkers
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+
+# Debug / Build Artifacts
+cython_debug/
+
+# PyPI
+.pypirc
+
+# QGIS Plugin
+*.qgs~
+*.qgz~
+*_ui.py
+resources.py
+symbology-style.db
+
+# OS / Temp Files
+*~
+.*.swp
+.DS_Store
+
+# Project Specific
+.archive/
+*/.archive/
+**/.archive/
+.backup/
+*/.backup/
+**/.backup/
+.pwsh/
+.venv/
+.conf/
+CLAUDE.md
+logs/
+
+# Build Output
+builds/
+*.zip
+
+# Workflow Files
+.remote-workflow/
+.claude/
+.specify/
+specs/
+docs/claude/
+.gemini/
+docs/gemini/
+.python-version
