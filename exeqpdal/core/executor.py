@@ -7,7 +7,7 @@ import logging
 import subprocess
 import tempfile
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from exeqpdal.core.config import config
 from exeqpdal.exceptions import PDALExecutionError
@@ -31,7 +31,7 @@ class Executor:
         pipeline_json: str | dict[str, Any],
         stream_mode: bool | None = None,
         metadata: bool = True,
-    ) -> tuple[str, str, int]:
+    ) -> tuple[str, str, int, dict[str, Any] | None]:
         """Execute PDAL pipeline.
 
         Args:
@@ -40,7 +40,7 @@ class Executor:
             metadata: Include metadata in output
 
         Returns:
-            Tuple of (stdout, stderr, returncode)
+            Tuple of (stdout, stderr, returncode, metadata_dict)
 
         Raises:
             PDALExecutionError: If pipeline execution fails
@@ -77,9 +77,6 @@ class Executor:
                 cmd.append("--verbose")
                 cmd.append("8")
 
-            # Add stdin flag to read from file
-            cmd.extend(["--input", str(pipeline_file)])
-
             logger.debug(f"Executing PDAL command: {' '.join(cmd)}")
 
             # Execute command
@@ -91,18 +88,19 @@ class Executor:
             )
 
             # Read metadata if generated
+            metadata_dict: dict[str, Any] | None = None
             if metadata_file and metadata_file.exists():
                 try:
                     with open(metadata_file, encoding="utf-8") as f:
-                        metadata_content = f.read()
-                        logger.debug(f"Metadata size: {len(metadata_content)} bytes")
+                        metadata_dict = json.load(f)
+                        logger.debug(f"Metadata loaded: {len(str(metadata_dict))} bytes")
                 except Exception as e:
                     logger.warning(f"Failed to read metadata: {e}")
 
             # Check for errors
             if result.returncode != 0:
                 raise PDALExecutionError(
-                    f"PDAL pipeline execution failed",
+                    "PDAL pipeline execution failed",
                     returncode=result.returncode,
                     stdout=result.stdout,
                     stderr=result.stderr,
@@ -110,7 +108,7 @@ class Executor:
                 )
 
             logger.info(f"Pipeline executed successfully (return code: {result.returncode})")
-            return result.stdout, result.stderr, result.returncode
+            return result.stdout, result.stderr, result.returncode, metadata_dict
 
         finally:
             # Cleanup temporary files
@@ -269,7 +267,7 @@ class Executor:
             )
 
         try:
-            return json.loads(result.stdout)
+            return cast(dict[str, Any], json.loads(result.stdout))
         except json.JSONDecodeError as e:
             raise PDALExecutionError(
                 f"Failed to parse driver info: {e}",

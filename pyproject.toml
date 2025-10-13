@@ -116,6 +116,9 @@ addopts = [
     "--cov=exeqpdal",
     "--cov-report=term-missing",
 ]
+markers = [
+    "integration: marks tests as integration tests (require real PDAL CLI)",
+]
 
 [tool.coverage.run]
 source = ["exeqpdal"]

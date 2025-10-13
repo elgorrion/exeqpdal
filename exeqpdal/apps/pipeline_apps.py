@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import logging
-from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING
 
 from exeqpdal.core.executor import executor
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +26,7 @@ def merge(
     Raises:
         PDALExecutionError: If merge fails
     """
-    args = [str(output_file)] + [str(f) for f in input_files]
+    args = [str(f) for f in input_files] + [str(output_file)]
 
     logger.info(f"Merging {len(input_files)} files to {output_file}")
     executor.execute_application("merge", args)
@@ -67,7 +69,7 @@ def split(
 
 def tile(
     input_file: str | Path,
-    output_dir: str | Path,
+    output_pattern: str | Path,
     *,
     length: float | None = None,
     origin_x: float | None = None,
@@ -78,7 +80,7 @@ def tile(
 
     Args:
         input_file: Input file path
-        output_dir: Output directory
+        output_pattern: Output filename pattern (use # for tile numbers, e.g. "tile_#.las")
         length: Tile edge length (meters)
         origin_x: X origin for tiling
         origin_y: Y origin for tiling
@@ -86,8 +88,11 @@ def tile(
 
     Raises:
         PDALExecutionError: If tiling fails
+
+    Examples:
+        >>> tile("input.las", "tiles/tile_#.las", length=100.0)
     """
-    args = [str(input_file), str(output_dir)]
+    args = [str(input_file), str(output_pattern)]
 
     if length is not None:
         args.extend(["--length", str(length)])
@@ -101,7 +106,7 @@ def tile(
     if buffer is not None:
         args.extend(["--buffer", str(buffer)])
 
-    logger.info(f"Tiling {input_file} to {output_dir}")
+    logger.info(f"Tiling {input_file} to {output_pattern}")
     executor.execute_application("tile", args)
     logger.info("Tiling completed")
 
@@ -111,7 +116,7 @@ def tindex(
     output_file: str | Path,
     *,
     filespec: str | None = None,
-    tindex: str | None = None,
+    tindex_name: str | None = None,
     fast_boundary: bool = False,
 ) -> None:
     """Create a tile index from multiple files.
@@ -120,19 +125,19 @@ def tindex(
         input_files: List of input file paths
         output_file: Output index file path
         filespec: File specification pattern
-        tindex: Index name
+        tindex_name: Tile index column name
         fast_boundary: Use fast boundary computation
 
     Raises:
         PDALExecutionError: If tindex creation fails
     """
-    args = [str(output_file)] + [str(f) for f in input_files]
+    args = ["create", "--tindex", str(output_file), "-f", "GeoJSON"] + [str(f) for f in input_files]
 
     if filespec is not None:
         args.extend(["--filespec", filespec])
 
-    if tindex is not None:
-        args.extend(["--tindex", tindex])
+    if tindex_name is not None:
+        args.extend(["--tindex_name", tindex_name])
 
     if fast_boundary:
         args.append("--fast_boundary")

@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
-from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -12,8 +10,6 @@ import exeqpdal as pdal
 from exeqpdal.core.config import Config
 from exeqpdal.exceptions import (
     ConfigurationError,
-    PDALExecutionError,
-    PDALNotFoundError,
     PipelineError,
     StageError,
 )

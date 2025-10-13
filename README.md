@@ -40,7 +40,7 @@ pipeline = pdal.Pipeline('{"pipeline": ["input.las", {"type": "filters.range", "
 count = pipeline.execute()
 
 # Stage chaining
-pipeline = (
+pipeline = pdal.Pipeline(
     pdal.Reader.las("input.las")
     | pdal.Filter.range(limits="Classification[2:2]")
     | pdal.Writer.las("output.las")
@@ -63,7 +63,9 @@ merge(["file1.las", "file2.las"], "merged.las")
 ```python
 import exeqpdal as pdal
 
-pipeline = pdal.Reader.las("input.las") | pdal.Filter.range(limits="Classification[2:2]")
+pipeline = pdal.Pipeline(
+    pdal.Reader.las("input.las") | pdal.Filter.range(limits="Classification[2:2]")
+)
 pipeline.execute()
 
 arrays = pipeline.arrays
@@ -98,7 +100,7 @@ And 80+ more filters.
 import exeqpdal as pdal
 
 try:
-    pipeline = pdal.Reader.las("input.las") | pdal.Writer.las("output.las")
+    pipeline = pdal.Pipeline(pdal.Reader.las("input.las") | pdal.Writer.las("output.las"))
     pipeline.execute()
 except pdal.PDALNotFoundError:
     print("PDAL binary not found")

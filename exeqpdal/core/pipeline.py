@@ -4,14 +4,12 @@ from __future__ import annotations
 
 import json
 import logging
-import tempfile
-from pathlib import Path
 from typing import Any
 
 import numpy as np
 
 from exeqpdal.core.executor import executor
-from exeqpdal.exceptions import MetadataError, PipelineError, ValidationError
+from exeqpdal.exceptions import PipelineError, ValidationError
 from exeqpdal.stages.base import Stage
 
 logger = logging.getLogger(__name__)
@@ -40,7 +38,7 @@ class Pipeline:
         self._executed: bool = False
         self._point_count: int = 0
         self._metadata: dict[str, Any] = {}
-        self._arrays: list[np.ndarray] = []
+        self._arrays: list[np.ndarray[Any, Any]] = []
         self._log: str = ""
         self._is_valid: bool | None = None
         self._is_streamable: bool | None = None
@@ -137,7 +135,7 @@ class Pipeline:
         """
         try:
             logger.info("Executing pipeline...")
-            stdout, stderr, returncode = executor.execute_pipeline(
+            stdout, stderr, _returncode, metadata_dict = executor.execute_pipeline(
                 self._pipeline_json,
                 stream_mode=self.stream_mode,
                 metadata=True,
@@ -146,8 +144,14 @@ class Pipeline:
             self._executed = True
             self._log = stdout + stderr
 
-            # Parse output for point count
-            self._parse_execution_output(stdout)
+            # Store metadata
+            if metadata_dict:
+                self._metadata = metadata_dict
+                # Extract point count from metadata
+                self._parse_metadata_count(metadata_dict)
+            else:
+                # Fallback to parsing stdout (less reliable)
+                self._parse_execution_output(stdout)
 
             # Try to load arrays if any output was generated
             self._load_arrays()
@@ -157,6 +161,26 @@ class Pipeline:
 
         except Exception as e:
             raise PipelineError(f"Pipeline execution failed: {e}") from e
+
+    def _parse_metadata_count(self, metadata: dict[str, Any]) -> None:
+        """Parse metadata to extract point count.
+
+        Args:
+            metadata: PDAL metadata dictionary
+        """
+        # Metadata structure: {"stages": {"reader.type": {"count": N}, ...}}
+        if "stages" in metadata:
+            stages = metadata["stages"]
+            # Look for count in any stage (typically reader or last filter)
+            for stage_name, stage_data in stages.items():
+                if isinstance(stage_data, dict) and "count" in stage_data:
+                    count = stage_data["count"]
+                    if isinstance(count, int):
+                        self._point_count = count
+                        logger.debug(f"Point count from {stage_name}: {count:,}")
+                        return
+
+        logger.warning("No point count found in metadata")
 
     def _parse_execution_output(self, output: str) -> None:
         """Parse PDAL execution output for point count and metadata.
@@ -215,7 +239,7 @@ class Pipeline:
             raise ValidationError(f"Pipeline validation failed: {e}") from e
 
     @property
-    def arrays(self) -> list[np.ndarray]:
+    def arrays(self) -> list[np.ndarray[Any, Any]]:
         """Get point data arrays.
 
         Returns:
