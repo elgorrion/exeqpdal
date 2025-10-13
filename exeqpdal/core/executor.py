@@ -91,7 +91,7 @@ class Executor:
             metadata_dict: dict[str, Any] | None = None
             if metadata_file and metadata_file.exists():
                 try:
-                    with open(metadata_file, encoding="utf-8") as f:
+                    with metadata_file.open(encoding="utf-8") as f:
                         metadata_dict = json.load(f)
                         logger.debug(f"Metadata loaded: {len(str(metadata_dict))} bytes")
                 except Exception as e:
@@ -267,7 +267,7 @@ class Executor:
             )
 
         try:
-            return cast(dict[str, Any], json.loads(result.stdout))
+            return cast("dict[str, Any]", json.loads(result.stdout))
         except json.JSONDecodeError as e:
             raise PDALExecutionError(
                 f"Failed to parse driver info: {e}",

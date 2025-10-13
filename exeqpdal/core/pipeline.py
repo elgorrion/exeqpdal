@@ -4,13 +4,14 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import Any
-
-import numpy as np
+from typing import TYPE_CHECKING, Any
 
 from exeqpdal.core.executor import executor
 from exeqpdal.exceptions import PipelineError, ValidationError
 from exeqpdal.stages.base import Stage
+
+if TYPE_CHECKING:
+    import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -82,8 +83,7 @@ class Pipeline:
 
         else:
             raise PipelineError(
-                f"Invalid pipeline type: {type(pipeline)}. "
-                "Expected str, dict, list, or Stage"
+                f"Invalid pipeline type: {type(pipeline)}. Expected str, dict, list, or Stage"
             )
 
         # Ensure pipeline is in correct format

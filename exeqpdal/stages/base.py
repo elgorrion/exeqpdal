@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 from abc import ABC
 from typing import Any
 
@@ -82,7 +81,7 @@ class Stage(ABC):
             raise StageError(f"Cannot pipe to {type(other)}, must be a Stage")
 
         # Set self as input to other
-        if other.inputs is None:
+        if not other.inputs:
             other.inputs = []
 
         # Auto-generate tag if needed

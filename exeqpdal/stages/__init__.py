@@ -7,7 +7,7 @@ from exeqpdal.stages.filters import Filter
 from exeqpdal.stages.readers import Reader, read_copc, read_las, read_text
 from exeqpdal.stages.writers import Writer, write_copc, write_las, write_text
 
-__all__ = [
+__all__ = [  # noqa: RUF022
     # Base classes
     "FilterStage",
     "ReaderStage",
