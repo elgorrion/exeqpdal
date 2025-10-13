@@ -81,7 +81,7 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]
-"tests/**/*.py" = ["ARG", "S101"]
+"tests/**/*.py" = ["ARG", "S101", "SIM105"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["exeqpdal"]
@@ -118,6 +118,7 @@ addopts = [
 ]
 markers = [
     "integration: marks tests as integration tests (require real PDAL CLI)",
+    "slow: marks tests as slow-running tests (may take >10 seconds)",
 ]
 
 [tool.coverage.run]
