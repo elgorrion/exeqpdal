@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -11,7 +12,7 @@ import pytest
 from exeqpdal.exceptions import PDALExecutionError
 
 # LAZ test data constants
-LAZ_DIR = Path("/home/vona/QGIS_Projects/LAS_Sources")
+LAZ_DIR = Path(os.environ.get("EXEQPDAL_TEST_DATA", "/tmp/exeqpdal_test_data"))
 
 # File mapping
 LAZ_SMALL = LAZ_DIR / "785_5351.laz"
@@ -22,6 +23,13 @@ LAZ_DUAL_2 = LAZ_DIR / "786_5350.laz"
 
 # Writer test outputs (moved from laz_to_writers/conftest.py)
 OUTPUT_BASE = Path(__file__).parent / "laz_to_writers" / "outputs"
+
+
+@pytest.fixture(scope="session")
+def skip_if_no_test_data() -> None:
+    """Skip test if EXEQPDAL_TEST_DATA environment variable not set."""
+    if not os.environ.get("EXEQPDAL_TEST_DATA"):
+        pytest.skip("EXEQPDAL_TEST_DATA environment variable not set")
 
 
 @pytest.fixture
@@ -36,7 +44,7 @@ def skip_if_no_pdal() -> None:
 
 
 @pytest.fixture
-def small_laz() -> Path:
+def small_laz(skip_if_no_test_data) -> Path:
     """Small LAZ file for quick tests (~55MB, ~8M points).
 
     File: 785_5351.laz
@@ -48,7 +56,7 @@ def small_laz() -> Path:
 
 
 @pytest.fixture
-def medium_laz() -> Path:
+def medium_laz(skip_if_no_test_data) -> Path:
     """Medium LAZ file for moderate tests (~85MB, ~13M points).
 
     File: 785_5350.laz
@@ -60,7 +68,7 @@ def medium_laz() -> Path:
 
 
 @pytest.fixture
-def large_laz() -> Path:
+def large_laz(skip_if_no_test_data) -> Path:
     """Large LAZ file for performance tests (~144MB, ~23M points).
 
     File: 786_5348.laz
@@ -72,7 +80,7 @@ def large_laz() -> Path:
 
 
 @pytest.fixture
-def dual_laz() -> list[Path]:
+def dual_laz(skip_if_no_test_data) -> list[Path]:
     """Two LAZ files for merge/batch tests.
 
     Files: 786_5349.laz (~49MB), 786_5350.laz (~50MB)
@@ -104,7 +112,7 @@ def pdal_version() -> str:
 
 
 @pytest.fixture(scope="session")
-def writer_test_laz() -> Path:
+def writer_test_laz(skip_if_no_test_data) -> Path:
     """LAZ file optimized for writer tests (49MB, 10.9M points).
 
     File: 786_5349.laz
