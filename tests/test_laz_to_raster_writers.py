@@ -34,15 +34,15 @@ import pytest
 if TYPE_CHECKING:
     from pathlib import Path
 
-import exeqpdal as pdal
-from exeqpdal import Pipeline
-from exeqpdal.exceptions import PDALExecutionError
-
 from conftest import (
     get_output_filename,
     handle_writer_exception,
     validate_output_file,
 )
+
+import exeqpdal as pdal
+from exeqpdal import Pipeline
+from exeqpdal.exceptions import PDALExecutionError
 
 # Test configurations: (writer_name, extension, options)
 RASTER_WRITERS: list[tuple[str, str, dict[str, float | str]]] = [
@@ -113,7 +113,4 @@ def test_raster_writer(
     validation = validate_output_file(output_file)
     assert validation["valid"], f"Output validation failed for {writer_name}"
 
-    print(
-        f"✓ {writer_name}_{config_id}: {point_count:,} points, "
-        f"{validation['size']:,} bytes"
-    )
+    print(f"✓ {writer_name}_{config_id}: {point_count:,} points, {validation['size']:,} bytes")

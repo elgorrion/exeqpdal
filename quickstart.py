@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import sys
-from pathlib import Path
 
 
 def check_python_version() -> bool:
@@ -12,7 +11,9 @@ def check_python_version() -> bool:
     if sys.version_info < (3, 12):
         print(f"❌ Python 3.12+ required, found {sys.version_info.major}.{sys.version_info.minor}")
         return False
-    print(f"✓ Python version: {sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}")
+    print(
+        f"✓ Python version: {sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
+    )
     return True
 
 

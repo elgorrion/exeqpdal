@@ -33,11 +33,11 @@ import pytest
 if TYPE_CHECKING:
     from pathlib import Path
 
+from conftest import handle_writer_exception
+
 import exeqpdal as pdal
 from exeqpdal import Pipeline
 from exeqpdal.exceptions import PDALExecutionError
-
-from conftest import handle_writer_exception
 
 
 @pytest.mark.skip(reason="Database writers require database setup - see docstring for details")
@@ -125,9 +125,7 @@ def test_tiledb_writer(
     tiledb_path = os.getenv("TEST_TILEDB_PATH", str(writer_output_dir / "tiledb_output"))
 
     # Create pipeline
-    pipeline = Pipeline(
-        pdal.Reader.las(str(writer_test_laz)) | pdal.Writer.tiledb(tiledb_path)
-    )
+    pipeline = Pipeline(pdal.Reader.las(str(writer_test_laz)) | pdal.Writer.tiledb(tiledb_path))
 
     # Execute
     try:

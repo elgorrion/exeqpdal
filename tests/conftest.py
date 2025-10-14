@@ -228,8 +228,7 @@ def handle_writer_exception(e: Exception, writer_name: str) -> None:
 
     if any(pattern in error_msg for pattern in skip_patterns):
         pytest.skip(
-            f"Writer '{writer_name}' not available in this PDAL installation. "
-            f"Error: {str(e)[:100]}"
+            f"Writer '{writer_name}' not available in this PDAL installation. Error: {str(e)[:100]}"
         )
 
     # Configuration issues
@@ -243,8 +242,7 @@ def handle_writer_exception(e: Exception, writer_name: str) -> None:
 
     if any(pattern in error_msg for pattern in config_patterns):
         pytest.skip(
-            f"Writer '{writer_name}' requires additional configuration. "
-            f"Error: {str(e)[:100]}"
+            f"Writer '{writer_name}' requires additional configuration. Error: {str(e)[:100]}"
         )
 
     # Actual failures - let test fail

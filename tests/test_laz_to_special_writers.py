@@ -36,15 +36,15 @@ import pytest
 if TYPE_CHECKING:
     from pathlib import Path
 
-import exeqpdal as pdal
-from exeqpdal import Pipeline
-from exeqpdal.exceptions import PDALExecutionError
-
 from conftest import (
     get_output_filename,
     handle_writer_exception,
     validate_output_file,
 )
+
+import exeqpdal as pdal
+from exeqpdal import Pipeline
+from exeqpdal.exceptions import PDALExecutionError
 
 # Special format writers
 SPECIAL_WRITERS: list[tuple[str, str, dict[str, str | float]]] = [

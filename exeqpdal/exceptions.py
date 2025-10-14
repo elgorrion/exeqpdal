@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 
 class PDALError(Exception):
     """Base exception for all PDAL-related errors."""
@@ -14,7 +12,9 @@ class PDALError(Exception):
 class PDALNotFoundError(PDALError):
     """Raised when PDAL binary cannot be found in system."""
 
-    def __init__(self, message: str = "PDAL executable not found in PATH or QGIS installation") -> None:
+    def __init__(
+        self, message: str = "PDAL executable not found in PATH or QGIS installation"
+    ) -> None:
         super().__init__(message)
         self.message = message
 
