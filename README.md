@@ -2,7 +2,7 @@
 
 Type-safe Python API for PDAL CLI commands. Designed for QGIS plugin development and environments where python-pdal bindings are unavailable.
 
-**Status**: Development (v0.1.0-dev) - GitHub installation only, not on PyPI.
+**Status**: Alpha (v0.1.0a1) - Available on PyPI for testing.
 
 ## Features
 
@@ -14,19 +14,47 @@ Type-safe Python API for PDAL CLI commands. Designed for QGIS plugin development
 
 ## Installation
 
-**Prerequisites**: Python 3.12+, PDAL CLI binary installed
+### Quick Install
 
 ```bash
-git clone https://github.com/elgorrion/exeqpdal.git
-cd exeqpdal
-uv venv && source .venv/bin/activate  # Windows: .venv\Scripts\activate
-uv pip install -e ".[dev]"
+pip install exeqpdal
 ```
 
-**PDAL Installation**:
-- Linux: `sudo apt install pdal`
-- macOS: `brew install pdal`
-- Windows: Bundled with QGIS 3.40+ at `{QGIS_ROOT}/bin/pdal.exe`
+### PDAL CLI Requirement
+
+exeqpdal requires PDAL CLI to be installed separately:
+
+**Linux** (Ubuntu/Debian):
+```bash
+sudo apt install pdal
+```
+
+**macOS** (Homebrew):
+```bash
+brew install pdal
+```
+
+**Windows** (via QGIS):
+- Install QGIS 3.40+ (includes PDAL)
+- PDAL binary at: `C:\Program Files\QGIS 3.x\bin\pdal.exe`
+- exeqpdal auto-detects QGIS installation
+
+**Windows** (standalone):
+```bash
+conda install -c conda-forge pdal
+```
+
+### Verification
+
+```python
+import exeqpdal as pdal
+
+# Check PDAL CLI is found
+pdal.validate_pdal()
+print(f"PDAL version: {pdal.get_pdal_version()}")
+```
+
+**For troubleshooting**: See [docs/troubleshooting.md](docs/troubleshooting.md)
 
 ## Quick Start
 
@@ -139,14 +167,14 @@ ruff check .
 ruff format .
 ```
 
-See [CLAUDE.md](CLAUDE.md) for detailed development guidance.
+For detailed development guidance, see [CONTRIBUTING.md](CONTRIBUTING.md) and [docs/exeqpdal_dev.md](docs/exeqpdal_dev.md).
 
 ## Documentation
 
-- [INSTALL.md](INSTALL.md) - Installation and troubleshooting
 - [EXAMPLES.md](EXAMPLES.md) - Usage examples
-- [ARCHITECTURE.md](ARCHITECTURE.md) - Technical architecture
 - [CONTRIBUTING.md](CONTRIBUTING.md) - Development workflow
+- [docs/exeqpdal_dev.md](docs/exeqpdal_dev.md) - Complete developer reference
+- [docs/troubleshooting.md](docs/troubleshooting.md) - Installation and runtime issues
 
 ## License
 
