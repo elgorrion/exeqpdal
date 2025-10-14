@@ -7,35 +7,58 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-**Status**: Development (v0.1.0-dev) - Not yet released
-
-### Implemented
-- Core Pipeline class with JSON pipeline support
-- Stage chaining with pipe operator (Reader | Filter | Writer)
-- 38 reader stages (las, copc, e57, ept, text, etc.)
-- 90+ filter stages (smrf, pmf, outlier, range, etc.)
-- 22 writer stages (las, copc, gdal, ply, text, etc.)
-- High-level applications (info, translate, merge, split, tile)
-- PDAL binary discovery (PATH, QGIS, custom paths)
-- Complete type hints (mypy strict mode)
-- Exception hierarchy (PDALError subtypes)
-
-### In Progress
-- Test suite completion
-- Documentation improvements
-- CI/CD setup
-- PyPI release preparation
-
 ### Planned
-- Stream mode validation
+- Stream mode validation improvements
 - Enhanced metadata parsing
-- QGIS plugin integration examples
 - Performance optimizations
-
-## Release History
-
-No releases yet. Project is in active development.
+- Additional PDAL filter/writer support
 
 ---
 
-[Unreleased]: https://github.com/elgorrion/exeqpdal/compare/HEAD
+## [0.1.0a1] - 2025-10-14
+
+**First alpha release** - Type-safe Python API for PDAL CLI
+
+### Added
+
+**Core Functionality**:
+- Complete Python API for PDAL CLI execution via subprocess
+- Type-safe stage creation (38 readers, 90+ filters, 22 writers)
+- Pythonic pipeline assembly with pipe operator (`|`)
+- High-level applications: info, translate, merge, split, tile, tindex
+- Comprehensive exception hierarchy (9 exception types)
+- PDAL CLI auto-discovery (PATH, QGIS bundle, conda, custom paths)
+
+**Type Safety**:
+- Full type hints on all public APIs
+- mypy strict mode compliance
+- py.typed marker for type checker support
+
+**Testing**:
+- Comprehensive pytest test suite
+- 80%+ test coverage
+- Integration tests with real PDAL CLI
+- Unit tests with mocked subprocess
+
+**Documentation**:
+- Complete README with quick start and examples
+- Detailed developer guide (docs/exeqpdal_dev.md)
+- Gold standard implementation patterns (docs/examples/)
+- Contributing guide with workflow and standards
+- Troubleshooting guide for installation and runtime issues
+
+**Quality Assurance**:
+- ruff linting and formatting
+- mypy strict type checking
+- pytest with coverage reporting
+- Constitution-driven development
+
+### Security
+- subprocess execution with shell=False
+- Temporary file cleanup on errors (finally blocks)
+- PDAL CLI version validation
+
+---
+
+[Unreleased]: https://github.com/elgorrion/exeqpdal/compare/v0.1.0a1...HEAD
+[0.1.0a1]: https://github.com/elgorrion/exeqpdal/releases/tag/v0.1.0a1
