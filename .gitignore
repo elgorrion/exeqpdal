@@ -1,158 +1,149 @@
-# Python
+# Python Artifacts
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 
-# Distribution / Packaging
+# Build & Packaging Outputs
 .Python
+*.egg
+*.egg-info/
+*.manifest
+*.spec
+*.zip
+.eggs/
+.installed.cfg
+MANIFEST
 build/
+builds/
 develop-eggs/
 dist/
 downloads/
 eggs/
-.eggs/
 lib/
 lib64/
 parts/
 sdist/
+share/python-wheels/
 var/
 wheels/
-share/python-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
-*.manifest
-*.spec
 
-# Logs
-pip-log.txt
-pip-delete-this-directory.txt
-*.log
+# Dependency Management
+.pdm-build/
+.pdm-python
+.pdm.toml
+Pipfile.lock
+poetry.lock
+uv.lock
+__pypackages__/
 
-# Testing / Coverage
-htmlcov/
-.tox/
-.nox/
+# Virtual Environments
+.env
+.venv/
+ENV/
+env/
+env.bak/
+venv/
+venv.bak/
+
+# Testing & Coverage
 .coverage
-coverage.*
 .coverage.*
+.hypothesis/
+.nox/
+.pytest_cache/
+.tox/
 .cache
-nosetests.xml
+cover/
+coverage.*
 coverage.xml
+htmlcov/
+nosetests.xml
 *.cover
 *.py,cover
-.hypothesis/
-.pytest_cache/
-cover/
+
+# Type Checkers & Linters
+.dmypy.json
+.mypy_cache/
+.pyre/
+.pytype/
+.ruff_cache/
+dmypy.json
+
+# Editor & IDE Settings
+.vscode/
+
+# Jupyter / IPython Artifacts
+.ipynb_checkpoints
+ipython_config.py
+profile_default/
+
+# Logs & Temporary Files
+*.log
+*~
+.*.swp
+pip-delete-this-directory.txt
+pip-log.txt
+
+# Framework & Task Queue State
+celerybeat-schedule
+celerybeat.pid
+db.sqlite3
+db.sqlite3-journal
+instance/
+local_settings.py
+.scrapy
+.webassets-cache
+
+# Documentation Outputs
+docs/_build/
+/site
 
 # Translations
 *.mo
 *.pot
 
-# Frameworks
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
-instance/
-.webassets-cache
-.scrapy
-
-# Documentation
-docs/_build/
-/site
-
-# Build Tools
-.pybuilder/
-target/
-
-# Jupyter / IPython
-.ipynb_checkpoints
-profile_default/
-ipython_config.py
-
-# Dependency Managers
-Pipfile.lock
-uv.lock
-poetry.lock
-.pdm.toml
-.pdm-python
-.pdm-build/
-__pypackages__/
-
-# Task Queues
-celerybeat-schedule
-celerybeat.pid
-
-# Misc Python
+# Miscellaneous Python
 *.sage.py
 
-# Virtual Environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-
-# IDEs
-
-# VSCode
-.vscode/*
-
-# Type Checkers
-.mypy_cache/
-.dmypy.json
-dmypy.json
-.pyre/
-.pytype/
-
-# Debug / Build Artifacts
-cython_debug/
-
-# PyPI
+# PyPI Credentials
 .pypirc
 
-# QGIS Plugin
+# QGIS Plugin Artifacts
+*_ui.py
 *.qgs~
 *.qgz~
-*_ui.py
 resources.py
 symbology-style.db
 
-# OS / Temp Files
-*~
-.*.swp
+# Operating System Artifacts
 .DS_Store
 
-# Project Specific
+# Project-Specific Artifacts
 .archive/
 */.archive/
 **/.archive/
 .backup/
 */.backup/
 **/.backup/
-.pwsh/
-.venv/
 .conf/
+.pwsh/
+.python-version
+.specify/
+AGENTS.m
+AGENTS.md
 CLAUDE.md
 GEMINI.md
 logs/
 
-# Build Output
-builds/
-*.zip
-
-# Workflow Files
-.remote-workflow/
-.gemini/
-docs/gemini/
+# Workflow Automation
 .claude/
+.gemini/
+.remote-workflow/
 docs/claude/
-.python-version
-# LAZ-to-writers test outputs
+docs/gemini/
+
+# LAZ-to-writers Test Outputs
 tests/laz_to_writers/outputs/*
 !tests/laz_to_writers/outputs/.gitkeep
 !tests/laz_to_writers/outputs/README.md
