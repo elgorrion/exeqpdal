@@ -8,7 +8,7 @@ from typing import Any
 from exeqpdal.exceptions import StageError
 
 
-class Stage(ABC):
+class Stage(ABC):  # noqa: B024 - Concrete base class with ABC for semantic grouping
     """Base class for all PDAL stages."""
 
     def __init__(

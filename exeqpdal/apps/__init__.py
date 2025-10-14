@@ -14,15 +14,13 @@ from exeqpdal.apps.pipeline_apps import merge, pipeline, split, tile, tindex
 from exeqpdal.apps.translate import convert, translate
 
 __all__ = [
-    # info app and helpers
+    "convert",
     "get_bounds",
     "get_count",
     "get_dimensions",
     "get_srs",
     "get_stats",
     "info",
-    # Other apps
-    "convert",
     "merge",
     "pipeline",
     "split",

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from exeqpdal.core.executor import executor
 from exeqpdal.exceptions import PDALExecutionError
@@ -70,12 +70,12 @@ def info(
         args.append("--pointcloudschema")
 
     logger.info(f"Getting info for: {filename}")
-    stdout, stderr, returncode = executor.execute_application("info", args)
+    stdout, stderr, _ = executor.execute_application("info", args)
 
     try:
         result = json.loads(stdout)
         logger.debug(f"Info result: {len(stdout)} bytes")
-        return result
+        return cast("dict[str, Any]", result)
     except json.JSONDecodeError as e:
         raise PDALExecutionError(
             f"Failed to parse info output: {e}",
@@ -94,7 +94,7 @@ def get_bounds(filename: str | Path) -> dict[str, float]:
         Dictionary with bounds (minx, miny, minz, maxx, maxy, maxz)
     """
     result = info(filename, boundary=True)
-    return result.get("boundary", {})
+    return cast("dict[str, float]", result.get("boundary", {}))
 
 
 def get_count(filename: str | Path) -> int:
@@ -107,7 +107,7 @@ def get_count(filename: str | Path) -> int:
         Number of points in file
     """
     result = info(filename)
-    return result.get("count", 0)
+    return cast("int", result.get("count", 0))
 
 
 def get_dimensions(filename: str | Path) -> list[str]:
@@ -135,7 +135,7 @@ def get_srs(filename: str | Path) -> str:
     """
     result = info(filename, metadata=True)
     metadata = result.get("metadata", {})
-    return metadata.get("srs", {}).get("wkt", "")
+    return cast("str", metadata.get("srs", {}).get("wkt", ""))
 
 
 def get_stats(filename: str | Path) -> dict[str, Any]:
@@ -148,4 +148,4 @@ def get_stats(filename: str | Path) -> dict[str, Any]:
         Dictionary with dimension statistics
     """
     result = info(filename, stats=True)
-    return result.get("stats", {})
+    return cast("dict[str, Any]", result.get("stats", {}))

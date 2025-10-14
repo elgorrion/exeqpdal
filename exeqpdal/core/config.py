@@ -53,9 +53,8 @@ class Config:
             raise ConfigurationError(f"PDAL path is not a file: {path}")
 
         # Check if executable (Unix-like systems)
-        if platform.system() != "Windows":
-            if not os.access(path_obj, os.X_OK):
-                raise ConfigurationError(f"PDAL binary is not executable: {path}")
+        if platform.system() != "Windows" and not os.access(path_obj, os.X_OK):
+            raise ConfigurationError(f"PDAL binary is not executable: {path}")
 
         self._pdal_path = path_obj
         logger.info(f"PDAL path set to: {path_obj}")
