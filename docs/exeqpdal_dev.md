@@ -159,6 +159,66 @@ NO reverse dependencies (core never imports from stages/apps)
 - ❌ `tests/exeqpdal/` - avoid nesting
 - ❌ Code in `docs/` or `specs/` - documentation only
 
+### 2.4 Architecture Overview
+
+**Design Philosophy**: exeqpdal is a thin wrapper around PDAL CLI, not a reimplementation.
+
+**Core Principles**:
+1. **CLI-First**: All operations via `subprocess.run()` to PDAL CLI
+2. **Type-Safe**: Strict type hints, mypy compliance, py.typed marker
+3. **Pythonic**: Pipe operator (`|`), natural chaining, clear exceptions
+4. **Modular**: core/ (stable) + stages/ (extensible) + apps/ (convenient)
+
+**Architecture Layers**:
+```
+User Code (import exeqpdal)
+    ↓
+Public API (exeqpdal/__init__.py)
+    ↓
+Applications (apps/) ←─ High-level convenience
+    ↓
+Pipeline (core/pipeline.py) ←─ JSON generation, stage collection
+    ↓
+Executor (core/executor.py) ←─ CLI execution, error parsing
+    ↓
+subprocess.run() ←─ PDAL CLI invocation
+    ↓
+PDAL (external) ←─ Point cloud processing
+```
+
+**Design Rationale**:
+- **Why CLI Wrapper?**: PDAL CLI is authoritative, battle-tested, and comprehensive. Python reimplementation introduces bugs, version skew, and maintenance burden.
+- **Why Subprocess?**: Clean process boundary, no PDAL internals coupling, platform-agnostic, works in constrained environments (QGIS).
+- **Why JSON Pipelines?**: PDAL's native format, supports all operations, reproducible, human-readable, debuggable.
+- **Why Type Hints?**: Catch errors at development time (mypy), enable IDE autocomplete, self-document APIs, prevent runtime surprises.
+
+**Execution Flow**:
+1. **Stage Creation**: User calls factory methods (`Reader.las()`, `Filter.range()`, `Writer.las()`)
+2. **Stage Chaining**: Pipe operator (`|`) connects stages, setting `inputs` attribute on right-hand stage
+3. **Pipeline Assembly**: `Pipeline` class walks backward from final stage, collecting all stages in execution order
+4. **JSON Generation**: Each stage serializes to dict via `to_dict()`, assembled into `{"pipeline": [...]}`
+5. **Temporary File**: Pipeline JSON written to temp file (auto-cleaned in finally block)
+6. **CLI Execution**: `subprocess.run()` executes `pdal pipeline <temp_file.json>`
+7. **Result Parsing**: Point count, metadata, numpy arrays extracted from PDAL output
+
+**PDAL Binary Discovery** (priority order):
+1. `PDAL_EXECUTABLE` environment variable
+2. Custom path set via `set_pdal_path()`
+3. System PATH search
+4. QGIS installation detection (Windows: `C:\Program Files\QGIS 3.x\bin\pdal.exe`)
+5. Raise `PDALNotFoundError` if not found
+
+**Extensibility**:
+- New readers/filters/writers: Add factory method to `stages/readers.py`, `stages/filters.py`, or `stages/writers.py`
+- New applications: Create function in `apps/`, export via `apps/__init__.py` and main `__init__.py`
+- New types: Add to `types/dimensions.py` (dimension names, data types, classification codes)
+- Core execution: Stable, rarely changes (subprocess management is mature)
+
+**See Also**:
+- §4 (Architecture Patterns) for execution flow implementation details
+- §5 (Stage Implementation) for adding new PDAL operations
+- §9 (API Design Guidelines) for when to extend the API
+
 ---
 
 ## §3 - Code Standards
@@ -902,5 +962,4 @@ def test_feature(mocker):
 
 - **Constitution**: `.specify/memory/constitution.md` - The "why" behind patterns
 - **Gold Standards**: `docs/examples/*.md` - Reference implementations
-- **CLAUDE.md**: Project-specific guidance for Claude Code
-- **Architecture**: `ARCHITECTURE.md` - High-level system design
+- **Troubleshooting**: `docs/troubleshooting.md` - Installation and runtime issues
