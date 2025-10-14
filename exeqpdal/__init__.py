@@ -25,7 +25,7 @@ Usage:
 
 from __future__ import annotations
 
-__version__ = "0.1.0-dev"
+__version__ = "0.1.0a1"
 __author__ = "ElGorrion"
 __license__ = "MIT"
 
@@ -96,51 +96,56 @@ from exeqpdal.types import (
     Dimension,
 )
 
-__all__ = [
-    "DIMENSION_TYPES",
-    "Classification",
-    "ConfigurationError",
-    "DataType",
-    "Dimension",
-    "DimensionError",
-    "Filter",
-    "FilterStage",
-    "MetadataError",
-    "PDALError",
-    "PDALExecutionError",
-    "PDALNotFoundError",
+__all__ = [  # noqa: RUF022
+    # Core
     "Pipeline",
-    "PipelineError",
-    "Reader",
-    "ReaderStage",
-    "Stage",
-    "StageError",
-    "ValidationError",
-    "Writer",
-    "WriterStage",
     "config",
-    "convert",
-    "get_bounds",
-    "get_count",
-    "get_dimensions",
     "get_pdal_path",
     "get_pdal_version",
-    "get_srs",
-    "get_stats",
-    "info",
-    "merge",
-    "pipeline_app",
-    "read_copc",
-    "read_las",
-    "read_text",
     "set_pdal_path",
     "set_verbose",
+    "validate_pdal",
+    # Stages
+    "Reader",
+    "Filter",
+    "Writer",
+    "Stage",
+    "ReaderStage",
+    "FilterStage",
+    "WriterStage",
+    "read_las",
+    "read_copc",
+    "read_text",
+    "write_las",
+    "write_copc",
+    "write_text",
+    # Applications
+    "info",
+    "translate",
+    "convert",
+    "merge",
     "split",
     "tile",
     "tindex",
-    "translate",
-    "validate_pdal",
-    "write_copc",
-    "write_las",
-    "write_text",
+    "pipeline_app",
+    "get_bounds",
+    "get_count",
+    "get_dimensions",
+    "get_srs",
+    "get_stats",
+    # Exceptions
+    "PDALError",
+    "PDALNotFoundError",
+    "PDALExecutionError",
+    "PipelineError",
+    "StageError",
+    "ValidationError",
+    "DimensionError",
+    "MetadataError",
+    "ConfigurationError",
+    # Types
+    "Dimension",
+    "DataType",
+    "Classification",
+    "DIMENSION_TYPES",
 ]

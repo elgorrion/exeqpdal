@@ -1,82 +1,35 @@
 # exeqpdal
 
-**A Python API for PDAL that works everywhere** - especially in QGIS plugins and environments where python-pdal bindings aren't available.
+A Pythonic API for the Point Data Abstraction Library (PDAL).
 
-**Status**: Alpha (v0.1.0a1) - Ready for testing and feedback!
-
-## Why exeqpdal?
-
-If you've ever wanted to process point cloud data in Python but struggled with:
-- **QGIS plugin development** - python-pdal doesn't work in QGIS environments
-- **Deployment headaches** - python-pdal requires C++ dependencies and complex builds
-- **Platform compatibility** - Need something that works on Windows, Linux, and macOS
-
-Then exeqpdal is for you! It provides a clean, Pythonic API that wraps the PDAL command-line tool, giving you all the power of PDAL without the installation headaches.
+`exeqpdal` provides a simple and intuitive way to execute PDAL operations from Python, especially in environments where the standard `python-pdal` bindings are not available, such as in QGIS plugins.
 
 ## Features
 
-- **Familiar syntax** - Use native PDAL patterns like `Pipeline()` and stage chaining
-- **Type-safe** - Complete type hints (passes mypy strict mode)
-- **QGIS-ready** - Works seamlessly in QGIS 3.40+ plugin environments
-- **Pure Python** - No C++ dependencies, just subprocess calls
-- **Complete coverage** - All PDAL readers, writers, filters, and applications
+-   **Pythonic Interface:** Chain PDAL stages together using the `|` operator.
+-   **Type-Safe:** Fully type-hinted for better editor support and code quality.
+-   **QGIS-Ready:** Works out-of-the-box in QGIS 3.40+ plugins.
+-   **Pure Python:** No C++ dependencies, just `subprocess` calls to the `pdal` command-line tool.
+-   **Full PDAL Coverage:** Access to all PDAL readers, writers, filters, and applications.
+
+## Prerequisites
+
+-   Python 3.12+
+-   PDAL command-line tool installed and accessible in your system's PATH.
 
 ## Installation
-
-### Step 1: Install exeqpdal
 
 ```bash
 pip install exeqpdal
 ```
 
-That's it! Well, almost...
-
-### Step 2: Install PDAL CLI
-
-exeqpdal needs the PDAL command-line tool to be installed on your system. Don't worry, it's straightforward:
-
-**Linux** (Ubuntu/Debian):
-```bash
-sudo apt install pdal
-```
-
-**macOS** (Homebrew):
-```bash
-brew install pdal
-```
-
-**Windows** (easiest - via QGIS):
-- Install [QGIS 3.40+](https://qgis.org/download/) (includes PDAL)
-- PDAL is automatically at: `C:\Program Files\QGIS 3.x\bin\pdal.exe`
-- exeqpdal will find it automatically!
-
-**Windows** (standalone):
-```bash
-conda install -c conda-forge pdal
-```
-
-### Step 3: Verify Everything Works
-
-```python
-import exeqpdal as pdal
-
-# Check that exeqpdal can find PDAL
-pdal.validate_pdal()
-print(f"Success! Using PDAL version: {pdal.get_pdal_version()}")
-```
-
-**Having trouble?** Check our [troubleshooting guide](docs/troubleshooting.md) for common issues and solutions.
-
 ## Quick Start
 
-Let's process some point cloud data! Here are the most common tasks:
-
-### Convert a File (in 2 lines!)
+### Convert a File
 
 ```python
 import exeqpdal as pdal
 
-# Convert LAS to LAZ (compressed)
 pdal.translate("input.las", "output.laz")
 ```
 
@@ -85,160 +38,71 @@ pdal.translate("input.las", "output.laz")
 ```python
 import exeqpdal as pdal
 
-# Extract ground points (classification 2) from a LAS file
-pipeline = pdal.Pipeline(
+pipeline = (
     pdal.Reader.las("input.las")
     | pdal.Filter.range(limits="Classification[2:2]")
     | pdal.Writer.las("ground_only.las")
 )
 pipeline.execute()
-print(f"Done! Processed {pipeline._point_count:,} points")
 ```
 
 ### Get File Information
 
 ```python
-from exeqpdal import info, get_count, get_bounds
+from exeqpdal import info
 
-# Get detailed info about a file
 info_data = info("input.las", stats=True)
-
-# Quick queries
-print(f"Points: {get_count('input.las'):,}")
-print(f"Bounds: {get_bounds('input.las')}")
+print(info_data)
 ```
 
-### Merge Multiple Files
-
-```python
-from exeqpdal import merge
-
-# Combine multiple LAS files into one
-merge(["tile1.las", "tile2.las", "tile3.las"], "merged.las")
-```
-
-### Real-World Example: Ground Classification
-
-```python
-import exeqpdal as pdal
-
-# Classify ground points and create a DTM raster
-pipeline = pdal.Pipeline(
-    pdal.Reader.las("lidar_data.las")
-    | pdal.Filter.smrf()  # Simple Morphological Filter for ground classification
-    | pdal.Filter.range(limits="Classification[2:2]")  # Keep only ground points
-    | pdal.Writer.gdal(filename="dtm.tif", resolution=1.0, output_type="mean")
-)
-count = pipeline.execute()
-print(f"Created DTM from {count:,} ground points")
-```
-
-**Want more examples?** See [EXAMPLES.md](EXAMPLES.md) for batch processing, QGIS integration, and advanced workflows.
+For more examples, see the [examples documentation](docs/examples.md).
 
 ## Supported Components
 
-### Readers
-`las`, `copc`, `e57`, `ept`, `text`, `bpf`, `draco`, `gdal`, `hdf`, `i3s`, `las`, `matlab`, `mbio`, `mrsid`, `nitf`, `obj`, `optech`, `pcd`, `pgpointcloud`, `ply`, `pts`, `qfit`, `rdb`, `rxp`, `sbet`, `slpk`, `stac`, `tindex`, `terrasolid`, `tiledb`, and 10+ more.
-
-### Filters
-Ground classification: `smrf`, `pmf`, `csf`
-Outlier removal: `outlier`, `iqr`, `lof`
-Features: `normal`, `eigenvalues`, `covariancefeatures`
-Clustering: `dbscan`, `cluster`
-Transform: `reprojection`, `transformation`
-Decimation: `decimation`, `voxeldownsize`, `fps`
-And 80+ more filters.
-
-### Writers
-`las`, `copc`, `gdal`, `ply`, `text`, `bpf`, `draco`, `e57`, `fbx`, `gltf`, `matlab`, `nitf`, `null`, `pcd`, `pgpointcloud`, `raster`, `sbet`, `tiledb`, and more.
-
-### Applications
-`info`, `translate`, `merge`, `split`, `tile`, `tindex`, `pipeline`
+`exeqpdal` supports all PDAL readers, writers, filters, and applications. For a full list, please refer to the official [PDAL documentation](https://pdal.io/en/stable/stages/index.html).
 
 ## Error Handling
 
-exeqpdal provides clear, actionable error messages to help you fix issues quickly:
+`exeqpdal` provides a set of custom exceptions to handle errors related to PDAL execution, pipeline configuration, and more.
 
 ```python
 import exeqpdal as pdal
 
 try:
     pipeline = pdal.Pipeline(
-        pdal.Reader.las("input.las") | pdal.Writer.las("output.las")
+        pdal.Reader.las("non_existent_file.las") | pdal.Writer.las("output.las")
     )
     pipeline.execute()
-
-except pdal.PDALNotFoundError:
-    # PDAL CLI isn't installed or can't be found
-    print("PDAL not found. Please install PDAL or set PDAL_EXECUTABLE environment variable.")
-
 except pdal.PDALExecutionError as e:
-    # PDAL ran but failed (bad file, invalid options, etc.)
     print(f"PDAL execution failed: {e.stderr}")
-
-except pdal.PipelineError as e:
-    # Pipeline configuration is invalid
-    print(f"Pipeline configuration error: {e}")
 ```
-
-Most errors include helpful context like the command that failed and the actual PDAL error message.
 
 ## Configuration
 
 ### Custom PDAL Path
 
-If PDAL isn't being auto-detected, or you want to use a specific version:
+If PDAL is not in your system's PATH, you can set the path to the `pdal` executable manually:
 
 ```python
 import exeqpdal as pdal
 
-# Option 1: Set path in code
-pdal.set_pdal_path("/usr/local/bin/pdal")
-
-# Option 2: Set environment variable (recommended for deployment)
-# export PDAL_EXECUTABLE=/path/to/pdal
-
-# Verify it worked
-pdal.validate_pdal()
-print(f"Using PDAL {pdal.get_pdal_version()}")
+pdal.set_pdal_path("/path/to/your/pdal")
 ```
 
-### Verbose Output (for debugging)
+### Verbose Output
+
+Enable verbose output to see the PDAL command being executed and its output:
 
 ```python
 import exeqpdal as pdal
 
-# Enable verbose PDAL output to see what's happening
 pdal.set_verbose(True)
-
-# Now PDAL will print detailed execution info
-pipeline = pdal.Pipeline(pdal.Reader.las("input.las") | pdal.Writer.las("output.las"))
-pipeline.execute()
 ```
-
-## Development
-
-```bash
-# Tests
-pytest tests/
-
-# Type checking
-mypy exeqpdal/
-
-# Linting and formatting
-ruff check .
-ruff format .
-```
-
-For detailed development guidance, see [CONTRIBUTING.md](CONTRIBUTING.md) and [docs/exeqpdal_dev.md](docs/exeqpdal_dev.md).
-
-## Documentation
-
-- [EXAMPLES.md](EXAMPLES.md) - Usage examples
-- [CONTRIBUTING.md](CONTRIBUTING.md) - Development workflow
-- [docs/exeqpdal_dev.md](docs/exeqpdal_dev.md) - Complete developer reference
-- [docs/troubleshooting.md](docs/troubleshooting.md) - Installation and runtime issues
 
 ## License
 
-MIT License
+`exeqpdal` is licensed under the MIT License.
+
+This project is a wrapper around the PDAL command-line tool, which is licensed under the BSD license. When using `exeqpdal`, you are also using PDAL, and you should be aware of its license.
+
+If you are using `exeqpdal` in a QGIS plugin, you should also be aware of the QGIS license (GPLv2+).

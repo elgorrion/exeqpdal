@@ -138,6 +138,7 @@ symbology-style.db
 .venv/
 .conf/
 CLAUDE.md
+GEMINI.md
 logs/
 
 # Build Output
@@ -148,6 +149,8 @@ builds/
 .remote-workflow/
 .gemini/
 docs/gemini/
+.claude/
+docs/claude/
 .python-version
 # LAZ-to-writers test outputs
 tests/laz_to_writers/outputs/*
