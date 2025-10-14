@@ -1,52 +1,142 @@
 # Contributing to exeqpdal
 
-Development guide for contributors.
+**Thank you for considering contributing to exeqpdal!**
 
-## Setup
+We're excited to have you here. Whether you're fixing a bug, adding a feature, improving documentation, or just asking questions - your contributions make this project better for everyone.
+
+**New to open source?** Don't worry! This guide will walk you through everything.
+
+## Quick Start: Get the Code Running
+
+### 1. Fork and clone the repository
 
 ```bash
-git clone https://github.com/elgorrion/exeqpdal.git
+# Fork on GitHub first, then:
+git clone https://github.com/YOUR-USERNAME/exeqpdal.git
 cd exeqpdal
-uv venv && source .venv/bin/activate  # Windows: .venv\Scripts\activate
-uv pip install -e ".[dev]"
-python -c "import exeqpdal; print(exeqpdal.__version__)"
 ```
 
-**Prerequisites**: Python 3.12+, uv 0.9.0+, PDAL CLI, Git
-
-## Workflow
+### 2. Set up your development environment
 
 ```bash
-# Create branch
-git checkout -b feature/feature-name
+# Create a virtual environment
+uv venv && source .venv/bin/activate  # Windows: .venv\Scripts\activate
 
-# Make changes, run tests
+# Install in editable mode with dev dependencies
+uv pip install -e ".[dev]"
+
+# Verify it works
+python -c "import exeqpdal; print(f'Installed version: {exeqpdal.__version__}')"
+```
+
+### 3. Make sure tests pass
+
+```bash
+# Run all tests
 pytest tests/
+
+# Everything passing? Great! You're ready to contribute.
+```
+
+**Prerequisites**: Python 3.12+, uv 0.9.0+, PDAL CLI installed, Git
+
+**Having setup issues?** Open an issue and we'll help you get started!
+
+## How to Contribute
+
+### Step 1: Pick something to work on
+
+**Good first issues** (look for the "good first issue" label):
+- Documentation improvements
+- Adding examples
+- Fixing typos
+- Writing tests
+
+**Bigger contributions**:
+- New reader/writer/filter support
+- Bug fixes
+- Performance improvements
+
+Not sure where to start? Ask in an issue or discussion!
+
+### Step 2: Create a branch
+
+```bash
+# Create a branch for your changes
+git checkout -b feature/my-awesome-feature
+
+# Branch naming:
+# - feature/xxx for new features
+# - fix/xxx for bug fixes
+# - docs/xxx for documentation
+```
+
+### Step 3: Make your changes
+
+Write your code, add tests, update documentation as needed.
+
+### Step 4: Run quality checks
+
+```bash
+# Run tests (make sure they all pass!)
+pytest tests/
+
+# Check test coverage
 pytest tests/ --cov=exeqpdal --cov-report=term-missing
 
-# Type checking
+# Type checking (strict mode)
 mypy exeqpdal/
 
-# Linting
+# Linting and formatting
 ruff check .
 ruff format .
-
-# Commit
-git add .
-git commit -m "feat: description"
-
-# Push and create PR
-git push origin feature/feature-name
 ```
+
+**All checks must pass** before your PR can be merged.
+
+### Step 5: Commit your changes
+
+```bash
+git add .
+git commit -m "feat: add support for XYZ filter"
+```
+
+See [Commit Format](#commit-format) below for commit message guidelines.
+
+### Step 6: Push and create a Pull Request
+
+```bash
+# Push your branch
+git push origin feature/my-awesome-feature
+
+# Then go to GitHub and create a Pull Request
+```
+
+### Step 7: Address review feedback
+
+A maintainer will review your PR and may ask for changes. Don't worry - this is normal! We'll work with you to get your contribution merged.
 
 ## Commit Format
 
-- `feat:` - New feature
-- `fix:` - Bug fix
-- `docs:` - Documentation
-- `test:` - Tests
-- `refactor:` - Code refactoring
-- `chore:` - Maintenance
+We use conventional commits to keep the history clean and make releases easier.
+
+**Format**: `type: description`
+
+**Types**:
+- `feat:` - New feature (e.g., "feat: add support for filters.csf")
+- `fix:` - Bug fix (e.g., "fix: handle missing PDAL_EXECUTABLE gracefully")
+- `docs:` - Documentation only (e.g., "docs: add example for batch processing")
+- `test:` - Tests only (e.g., "test: add integration test for Writer.copc")
+- `refactor:` - Code refactoring (no functional changes)
+- `chore:` - Maintenance tasks (e.g., "chore: update dependencies")
+
+**Examples of good commit messages**:
+```
+feat: add support for filters.eigenvalues
+fix: correctly handle Windows paths with spaces
+docs: improve QGIS integration examples
+test: add tests for error handling in Pipeline.execute()
+```
 
 ## Code Standards
 
@@ -177,13 +267,26 @@ pytest tests/ --cov=exeqpdal --cov-report=html
 open htmlcov/index.html
 ```
 
-## Pull Request Process
+## Pull Request Checklist
 
-1. Update documentation
-2. Add tests for new code
-3. Pass all checks (pytest, mypy, ruff)
-4. Address review feedback
-5. Maintainer merges when approved
+Before submitting your PR, make sure:
+
+- [ ] **Tests pass**: `pytest tests/` runs without errors
+- [ ] **Type checking passes**: `mypy exeqpdal/` shows no errors
+- [ ] **Code is formatted**: `ruff format .` has been run
+- [ ] **Linting passes**: `ruff check .` shows no errors
+- [ ] **Documentation updated**: If you added features, update relevant docs
+- [ ] **Tests added**: New features have tests
+- [ ] **Commit message follows format**: Using conventional commits
+
+### What happens after you submit?
+
+1. **Automated checks run** - CI will test your code on multiple platforms
+2. **Maintainer reviews** - We'll look at your code and may suggest changes
+3. **You address feedback** - Make requested changes if needed
+4. **PR is merged** - Your contribution becomes part of exeqpdal!
+
+**Review time**: Most PRs are reviewed within a few days. Larger changes may take longer.
 
 ## Style Principles
 
@@ -209,6 +312,25 @@ ruff format .
 ruff check --fix .
 ```
 
+## Code of Conduct
+
+Be kind and respectful. We want everyone to feel welcome.
+
+- **Be friendly and patient**
+- **Be welcoming** - we're here to learn from each other
+- **Be considerate** - your work will be used by others
+- **Be respectful** - disagreement is okay, but be professional
+- **Be careful with words** - we're a diverse community
+
+If you experience or witness unacceptable behavior, please report it by opening an issue.
+
+## Questions?
+
+- **Not sure how to start?** Open an issue titled "Question: ..." and we'll help
+- **Want to discuss a big change?** Open a discussion before starting work
+- **Found a bug?** Open an issue with steps to reproduce
+- **Have a feature idea?** Open an issue to discuss it first
+
 ## License
 
-MIT License - contributions licensed under same terms.
+By contributing, you agree that your contributions will be licensed under the MIT License.

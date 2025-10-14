@@ -1,28 +1,39 @@
 # exeqpdal
 
-Type-safe Python API for PDAL CLI commands. Designed for QGIS plugin development and environments where python-pdal bindings are unavailable.
+**A Python API for PDAL that works everywhere** - especially in QGIS plugins and environments where python-pdal bindings aren't available.
 
-**Status**: Alpha (v0.1.0a1) - Available on PyPI for testing.
+**Status**: Alpha (v0.1.0a1) - Ready for testing and feedback!
+
+## Why exeqpdal?
+
+If you've ever wanted to process point cloud data in Python but struggled with:
+- **QGIS plugin development** - python-pdal doesn't work in QGIS environments
+- **Deployment headaches** - python-pdal requires C++ dependencies and complex builds
+- **Platform compatibility** - Need something that works on Windows, Linux, and macOS
+
+Then exeqpdal is for you! It provides a clean, Pythonic API that wraps the PDAL command-line tool, giving you all the power of PDAL without the installation headaches.
 
 ## Features
 
-- Native PDAL syntax support (`Pipeline()`, stage chaining)
-- Complete type hints (mypy strict mode)
-- QGIS 3.40+ compatible
-- Pure Python (subprocess-based, no C++ dependencies)
-- All PDAL readers, writers, filters, and applications
+- **Familiar syntax** - Use native PDAL patterns like `Pipeline()` and stage chaining
+- **Type-safe** - Complete type hints (passes mypy strict mode)
+- **QGIS-ready** - Works seamlessly in QGIS 3.40+ plugin environments
+- **Pure Python** - No C++ dependencies, just subprocess calls
+- **Complete coverage** - All PDAL readers, writers, filters, and applications
 
 ## Installation
 
-### Quick Install
+### Step 1: Install exeqpdal
 
 ```bash
 pip install exeqpdal
 ```
 
-### PDAL CLI Requirement
+That's it! Well, almost...
 
-exeqpdal requires PDAL CLI to be installed separately:
+### Step 2: Install PDAL CLI
+
+exeqpdal needs the PDAL command-line tool to be installed on your system. Don't worry, it's straightforward:
 
 **Linux** (Ubuntu/Debian):
 ```bash
@@ -34,73 +45,95 @@ sudo apt install pdal
 brew install pdal
 ```
 
-**Windows** (via QGIS):
-- Install QGIS 3.40+ (includes PDAL)
-- PDAL binary at: `C:\Program Files\QGIS 3.x\bin\pdal.exe`
-- exeqpdal auto-detects QGIS installation
+**Windows** (easiest - via QGIS):
+- Install [QGIS 3.40+](https://qgis.org/download/) (includes PDAL)
+- PDAL is automatically at: `C:\Program Files\QGIS 3.x\bin\pdal.exe`
+- exeqpdal will find it automatically!
 
 **Windows** (standalone):
 ```bash
 conda install -c conda-forge pdal
 ```
 
-### Verification
+### Step 3: Verify Everything Works
 
 ```python
 import exeqpdal as pdal
 
-# Check PDAL CLI is found
+# Check that exeqpdal can find PDAL
 pdal.validate_pdal()
-print(f"PDAL version: {pdal.get_pdal_version()}")
+print(f"Success! Using PDAL version: {pdal.get_pdal_version()}")
 ```
 
-**For troubleshooting**: See [docs/troubleshooting.md](docs/troubleshooting.md)
+**Having trouble?** Check our [troubleshooting guide](docs/troubleshooting.md) for common issues and solutions.
 
 ## Quick Start
 
-### Pipeline Execution
+Let's process some point cloud data! Here are the most common tasks:
+
+### Convert a File (in 2 lines!)
 
 ```python
 import exeqpdal as pdal
 
-# JSON pipeline
-pipeline = pdal.Pipeline('{"pipeline": ["input.las", {"type": "filters.range", "limits": "Classification[2:2]"}, "output.las"]}')
-count = pipeline.execute()
+# Convert LAS to LAZ (compressed)
+pdal.translate("input.las", "output.laz")
+```
 
-# Stage chaining
+### Filter Ground Points
+
+```python
+import exeqpdal as pdal
+
+# Extract ground points (classification 2) from a LAS file
 pipeline = pdal.Pipeline(
     pdal.Reader.las("input.las")
     | pdal.Filter.range(limits="Classification[2:2]")
-    | pdal.Writer.las("output.las")
+    | pdal.Writer.las("ground_only.las")
 )
 pipeline.execute()
+print(f"Done! Processed {pipeline._point_count:,} points")
 ```
 
-### Applications
+### Get File Information
 
 ```python
-from exeqpdal import info, translate, merge
+from exeqpdal import info, get_count, get_bounds
 
+# Get detailed info about a file
 info_data = info("input.las", stats=True)
-translate("input.las", "output.laz")
-merge(["file1.las", "file2.las"], "merged.las")
+
+# Quick queries
+print(f"Points: {get_count('input.las'):,}")
+print(f"Bounds: {get_bounds('input.las')}")
 ```
 
-### Point Data Access
+### Merge Multiple Files
+
+```python
+from exeqpdal import merge
+
+# Combine multiple LAS files into one
+merge(["tile1.las", "tile2.las", "tile3.las"], "merged.las")
+```
+
+### Real-World Example: Ground Classification
 
 ```python
 import exeqpdal as pdal
 
+# Classify ground points and create a DTM raster
 pipeline = pdal.Pipeline(
-    pdal.Reader.las("input.las") | pdal.Filter.range(limits="Classification[2:2]")
+    pdal.Reader.las("lidar_data.las")
+    | pdal.Filter.smrf()  # Simple Morphological Filter for ground classification
+    | pdal.Filter.range(limits="Classification[2:2]")  # Keep only ground points
+    | pdal.Writer.gdal(filename="dtm.tif", resolution=1.0, output_type="mean")
 )
-pipeline.execute()
-
-arrays = pipeline.arrays
-points = arrays[0]
-x, y, z = points['X'], points['Y'], points['Z']
-ground = points[points['Classification'] == 2]
+count = pipeline.execute()
+print(f"Created DTM from {count:,} ground points")
 ```
+
+**Want more examples?** See [EXAMPLES.md](EXAMPLES.md) for batch processing, QGIS integration, and advanced workflows.
 
 ## Supported Components
 
@@ -124,33 +157,63 @@ And 80+ more filters.
 
 ## Error Handling
 
+exeqpdal provides clear, actionable error messages to help you fix issues quickly:
+
 ```python
 import exeqpdal as pdal
 
 try:
-    pipeline = pdal.Pipeline(pdal.Reader.las("input.las") | pdal.Writer.las("output.las"))
+    pipeline = pdal.Pipeline(
+        pdal.Reader.las("input.las") | pdal.Writer.las("output.las")
+    )
     pipeline.execute()
+
 except pdal.PDALNotFoundError:
-    print("PDAL binary not found")
+    # PDAL CLI isn't installed or can't be found
+    print("PDAL not found. Please install PDAL or set PDAL_EXECUTABLE environment variable.")
+
 except pdal.PDALExecutionError as e:
-    print(f"Execution failed: {e.stderr}")
+    # PDAL ran but failed (bad file, invalid options, etc.)
+    print(f"PDAL execution failed: {e.stderr}")
+
 except pdal.PipelineError as e:
-    print(f"Configuration error: {e}")
+    # Pipeline configuration is invalid
+    print(f"Pipeline configuration error: {e}")
 ```
 
+Most errors include helpful context like the command that failed and the actual PDAL error message.
+
 ## Configuration
+
+### Custom PDAL Path
+
+If PDAL isn't being auto-detected, or you want to use a specific version:
 
 ```python
 import exeqpdal as pdal
 
-# Set custom PDAL path
+# Option 1: Set path in code
 pdal.set_pdal_path("/usr/local/bin/pdal")
 
-# Or use environment variable: export PDAL_EXECUTABLE=/path/to/pdal
+# Option 2: Set environment variable (recommended for deployment)
+# export PDAL_EXECUTABLE=/path/to/pdal
 
-# Validate installation
+# Verify it worked
 pdal.validate_pdal()
-version = pdal.get_pdal_version()
+print(f"Using PDAL {pdal.get_pdal_version()}")
+```
+
+### Verbose Output (for debugging)
+
+```python
+import exeqpdal as pdal
+
+# Enable verbose PDAL output to see what's happening
+pdal.set_verbose(True)
+
+# Now PDAL will print detailed execution info
+pipeline = pdal.Pipeline(pdal.Reader.las("input.las") | pdal.Writer.las("output.las"))
+pipeline.execute()
 ```
 
 ## Development
