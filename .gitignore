@@ -146,10 +146,10 @@ builds/
 
 # Workflow Files
 .remote-workflow/
-.claude/
-.specify/
-specs/
-docs/claude/
 .gemini/
 docs/gemini/
 .python-version
+# LAZ-to-writers test outputs
+tests/laz_to_writers/outputs/*
+!tests/laz_to_writers/outputs/.gitkeep
+!tests/laz_to_writers/outputs/README.md

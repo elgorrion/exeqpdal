@@ -1,11 +1,11 @@
 [project]
 name = "exeqpdal"
-version = "0.1.0-dev"
+version = "0.1.0a1"
 description = "Python API for executing PDAL CLI commands with native syntax support"
 authors = [
     {name = "ElGorrion", email = "elgorrion.eu@gmail.com"}
 ]
-readme = "README.md"
+readme = {file = "README.md", content-type = "text/markdown"}
 requires-python = ">=3.12"
 license = {text = "MIT"}
 keywords = ["pdal", "lidar", "pointcloud", "qgis", "geospatial"]
@@ -119,6 +119,7 @@ addopts = [
 markers = [
     "integration: marks tests as integration tests (require real PDAL CLI)",
     "slow: marks tests as slow-running tests (may take >10 seconds)",
+    "database: marks tests requiring database setup (PostgreSQL PointCloud, TileDB)",
 ]
 
 [tool.coverage.run]
