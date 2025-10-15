@@ -35,8 +35,9 @@ Thank you for your interest in contributing to `exeqpdal`! All contributions are
     pytest tests/
     ```
 
-    Integration tests require the PDAL CLI and LAZ fixtures pointed to by the `EXEQPDAL_TEST_DATA`
-    environment variable. Add `-m "not integration"` when these dependencies are unavailable.
+    Integration tests require the PDAL CLI and LAZ/COPC test datasets in `tests/test_data_laz/`.
+    Tests automatically skip when PDAL or test data are unavailable. Add `-m "not integration"`
+    to skip integration tests entirely.
 
 ## Development Workflow
 
@@ -51,7 +52,7 @@ Thank you for your interest in contributing to `exeqpdal`! All contributions are
     pytest tests/
     ```
 
-    Run `pytest -m "not integration"` when you cannot provide PDAL or the sample datasets. Keep test
+    Use `pytest -m "not integration"` to skip tests requiring PDAL and test datasets. Keep test
     outputs (especially under `tests/laz_to_writers/outputs/`) out of commits.
 
 -   Commit your changes using the existing Conventional Commit prefixes (for example,

@@ -49,10 +49,10 @@ ruff check .
 # Strict typing
 mypy exeqpdal
 
-# Tests – run full suite when PDAL + fixtures are available
+# Tests – run full suite when PDAL + test datasets are available
 pytest tests/
 
-# Skip integrations if PDAL or EXEQPDAL_TEST_DATA is unavailable
+# Skip integrations if PDAL or test datasets are unavailable
 pytest tests/ -m "not integration"
 ```
 
@@ -259,7 +259,8 @@ except pdal.PipelineError as exc:
 - Unit tests live under `tests/` and are enabled by default.
 - Integration tests are marked with `@pytest.mark.integration` and require:
   - PDAL CLI available on the test runner.
-  - `EXEQPDAL_TEST_DATA` pointing to LAZ fixtures (not part of the repository).
+  - Six LAZ/COPC test datasets in `tests/test_data_laz/` (see `DATASET.md` for details).
+  - Tests automatically skip when PDAL or test data are unavailable.
 - Writer tests store artefacts under `tests/laz_to_writers/outputs/`; this directory is gitignored and
   should remain untracked.
 - Continuous verification sequence (minimum before a PR):
@@ -294,7 +295,7 @@ except pdal.PipelineError as exc:
 ## 12. Release Preparation Checklist
 
 1. Ensure documentation is current (`README.md`, `docs/*.md`, `CHANGELOG.md`).
-2. Run the full quality suite, including integration tests with real PDAL + fixtures.
+2. Run the full quality suite, including integration tests with real PDAL and test datasets.
 3. Build artefacts and validate them:
 
    ```bash

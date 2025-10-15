@@ -128,8 +128,10 @@ pdal.set_verbose(True)
 
 -   `Pipeline.arrays` is not yet implemented – it currently returns an empty list even after
     execution.
--   Integration tests expect the `EXEQPDAL_TEST_DATA` environment variable to point to LAZ fixtures.
-    Unit tests skip cleanly when PDAL or the fixtures are unavailable.
+-   Integration tests use six LAZ/COPC test datasets in `tests/test_data_laz/` covering various
+    scenarios (filtered/non-filtered data, small/mid/large sizes, LAS/COPC formats). Tests
+    automatically skip when PDAL or test data are unavailable. See `tests/test_data_laz/DATASET.md`
+    for dataset details.
 -   Stage coverage is broad but incomplete. Missing drivers can be added by extending the factory
     modules or by building custom JSON.
 
