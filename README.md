@@ -1,23 +1,46 @@
 # exeqpdal
 
-A Pythonic API for the Point Data Abstraction Library (PDAL).
+Alpha-stage, typed Python API for driving the PDAL command-line interface (CLI).
 
-`exeqpdal` provides a simple and intuitive way to execute PDAL operations from Python, especially in environments where the standard `python-pdal` bindings are not available, such as in QGIS plugins.
+`exeqpdal` focuses on being a reliable subprocess wrapper around the PDAL CLI so that Python
+projects – including QGIS plugins – can assemble and run PDAL pipelines without shipping C++
+bindings. The current release series is `0.1.0a*` and is still stabilising APIs and coverage.
 
 ## Features
 
--   **Pythonic Interface:** Chain PDAL stages together using the `|` operator.
--   **Type-Safe:** Fully type-hinted for better editor support and code quality.
--   **QGIS-Ready:** Works out-of-the-box in QGIS 3.40+ plugins.
--   **Pure Python:** No C++ dependencies, just `subprocess` calls to the `pdal` command-line tool.
--   **Full PDAL Coverage:** Access to all PDAL readers, writers, filters, and applications.
+-   **Pythonic pipelines** – build PDAL JSON using `Reader`, `Filter`, and `Writer` factories chained
+    with the `|` operator, then execute with `Pipeline`.
+-   **CLI-first design** – no native extensions; every operation delegates to the PDAL executable via
+    `subprocess.run`.
+-   **Strict typing** – the package ships `py.typed`, is developed under `mypy --strict`, and exposes
+    typed factory helpers.
+-   **Convenience apps** – wrappers for PDAL tools such as `info`, `translate`, `merge`, `split`,
+    `tile`, and `tindex`.
+-   **Broad stage coverage** – factories currently expose ~40 readers, 80+ filters, and 25 writers.
+    Coverage is expanding; unsupported drivers can still be addressed through custom JSON.
+-   **QGIS-friendly** – automatic PDAL discovery checks PATH, `PDAL_EXECUTABLE`, and common QGIS 3.4x
+    Windows installs.
 
 ## Prerequisites
 
 -   Python 3.12+
--   PDAL command-line tool installed and accessible in your system's PATH.
+-   PDAL CLI installed and accessible (system PATH, `PDAL_EXECUTABLE`, or detected in QGIS on
+    Windows)
 
 ## Installation
+
+`exeqpdal` is being prepared for its first public upload. Until the package is published to PyPI,
+install from source:
+
+```bash
+# Clone the repository, then from the project root:
+pip install -e .
+
+# Or install with development extras
+uv pip install -e ".[dev]"
+```
+
+Once a release is published, the standard installation command will be:
 
 ```bash
 pip install exeqpdal
@@ -59,11 +82,13 @@ For more examples, see the [examples documentation](docs/examples.md).
 
 ## Supported Components
 
-`exeqpdal` supports all PDAL readers, writers, filters, and applications. For a full list, please refer to the official [PDAL documentation](https://pdal.io/en/stable/stages/index.html).
+Factory helpers cover the most commonly used PDAL readers, writers, and filters. For the definitive
+driver reference, consult the [PDAL documentation](https://pdal.io/en/stable/stages/index.html). If a
+driver is missing, you can still run it by injecting raw dictionaries into a `Pipeline`.
 
 ## Error Handling
 
-`exeqpdal` provides a set of custom exceptions to handle errors related to PDAL execution, pipeline configuration, and more.
+`exeqpdal` raises custom exceptions to surface PDAL CLI failures and configuration issues.
 
 ```python
 import exeqpdal as pdal
@@ -73,8 +98,8 @@ try:
         pdal.Reader.las("non_existent_file.las") | pdal.Writer.las("output.las")
     )
     pipeline.execute()
-except pdal.PDALExecutionError as e:
-    print(f"PDAL execution failed: {e.stderr}")
+except pdal.PipelineError as exc:
+    print(f"Pipeline execution failed: {exc}")
 ```
 
 ## Configuration
@@ -98,6 +123,15 @@ import exeqpdal as pdal
 
 pdal.set_verbose(True)
 ```
+
+## Project Status & Limitations
+
+-   `Pipeline.arrays` is not yet implemented – it currently returns an empty list even after
+    execution.
+-   Integration tests expect the `EXEQPDAL_TEST_DATA` environment variable to point to LAZ fixtures.
+    Unit tests skip cleanly when PDAL or the fixtures are unavailable.
+-   Stage coverage is broad but incomplete. Missing drivers can be added by extending the factory
+    modules or by building custom JSON.
 
 ## License
 

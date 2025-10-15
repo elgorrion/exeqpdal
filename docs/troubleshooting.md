@@ -119,7 +119,7 @@ import exeqpdal as pdal
 def process_lidar(input_file, output_file):
     """Process LiDAR data with helpful error messages for QGIS users."""
     try:
-        # exeqpdal will automatically find PDAL in QGIS installation
+        # exeqpdal uses the PDAL on PATH; on Windows it auto-detects the QGIS bundle
         pipeline = pdal.Pipeline(
             pdal.Reader.las(input_file)
             | pdal.Filter.outlier(method="statistical")
@@ -143,10 +143,10 @@ def process_lidar(input_file, output_file):
         )
         return False
 
-    except pdal.PDALExecutionError as e:
+    except pdal.PipelineError as exc:
         QgsMessageLog.logMessage(
-            f"PDAL execution failed: {e.stderr}\n"
-            f"Check that the input file exists and is a valid LAS file.",
+            f"PDAL pipeline failed: {exc}\n"
+            "Check that the input file exists and is a valid LAS/LAZ file.",
             "LiDAR",
             Qgis.Critical
         )
@@ -166,7 +166,8 @@ def process_lidar(input_file, output_file):
 - **macOS**: `/Applications/QGIS.app/Contents/MacOS/bin/pdal`
 - **Linux**: `/usr/bin/pdal` (via package manager)
 
-exeqpdal automatically checks these locations, so you usually don't need to set the path manually.
+exeqpdal automatically checks common Windows QGIS locations. On macOS and Linux, ensure PDAL is on
+your `PATH` or set it explicitly with `pdal.set_pdal_path(...)`.
 
 ### Testing your plugin:
 ```python
@@ -233,10 +234,11 @@ pdal.set_pdal_path("C:\\Program Files\\QGIS 3.40\\bin\\pdal.exe")
 
 ### If you see this error:
 ```
-PDALExecutionError: PDAL pipeline execution failed
+PipelineError: Pipeline execution failed: PDAL pipeline execution failed
 ```
 
-**This means**: PDAL ran successfully, but your pipeline configuration or data has a problem.
+**This means**: `Pipeline` called the PDAL CLI, which returned a non-zero exit status. The wrapped
+`PDALExecutionError` usually contains the precise CLI stderr explaining what went wrong.
 
 ### Common causes and solutions:
 
@@ -343,11 +345,16 @@ try:
         pdal.Reader.las("input.las") | pdal.Writer.las("output.las")
     )
     pipeline.execute()
-except pdal.PDALExecutionError as e:
+except pdal.PipelineError as exc:
     print("\n=== PDAL Error Details ===")
-    print(f"Command that failed: {' '.join(e.command)}")
-    print(f"\nStderr:\n{e.stderr}")
-    print(f"\nStdout:\n{e.stdout}")
+    print(f"Pipeline message: {exc}")
+    cause = exc.__cause__
+    if isinstance(cause, pdal.PDALExecutionError):
+        print(f"\nCommand that failed: {' '.join(cause.command)}")
+        print(f"\nStderr:\n{cause.stderr}")
+        print(f"\nStdout:\n{cause.stdout}")
+    else:
+        print("No PDALExecutionError cause available.")
 ```
 
 This will show you PDAL's actual error message, which often tells you exactly what's wrong.

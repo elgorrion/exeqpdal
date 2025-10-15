@@ -1,6 +1,6 @@
 # Examples
 
-This page contains a collection of examples that demonstrate how to use the `exeqpdal` library to perform common point cloud processing tasks.
+This page contains a collection of examples that demonstrate how to use the `exeqpdal` library to perform common point cloud processing tasks. All snippets assume the PDAL CLI is installed and discoverable (via `PATH`, `PDAL_EXECUTABLE`, or `pdal.set_pdal_path()`).
 
 ## Ground Classification
 
@@ -81,7 +81,10 @@ import exeqpdal as pdal
 pipeline = pdal.Pipeline(
     pdal.Reader.las("input.las")
     | pdal.Filter.hag_nn()
-    | pdal.Writer.las("with_heights.las")
+    | pdal.Writer.las(
+        "with_heights.las",
+        extra_dims="HeightAboveGround=float32",
+    )
 )
 pipeline.execute()
 ```
