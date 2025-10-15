@@ -40,7 +40,6 @@ class TestConfig:
     def test_verbose_setting(self) -> None:
         """Config toggles verbose flag."""
         config = Config()
-        initial_verbose = config.verbose
 
         config.set_verbose(True)
         assert config.verbose

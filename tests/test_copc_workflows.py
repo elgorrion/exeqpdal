@@ -238,7 +238,7 @@ class TestCOPCSpatialQueries:
         """Test efficient spatial query on COPC (should be faster than full read)."""
         output = tmp_path / "query_result.las"
 
-        # Small spatial query (100m × 100m area)
+        # Small spatial query (100m x 100m area)
         pipeline = Pipeline(
             pdal.Reader.copc(str(mid_copc), bounds="([785450,785550],[5350450,5350550])")
             | pdal.Writer.las(str(output))

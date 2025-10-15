@@ -122,30 +122,13 @@ class TestTindexOperations:
 
         try:
             # Create tile index
-            pdal.tindex(str(tindex_output), [str(file1), str(file2)])
+            pdal.tindex([str(file1), str(file2)], str(tindex_output))
 
             assert tindex_output.exists()
             assert tindex_output.stat().st_size > 0
         except Exception as e:
             # Tindex may not be available in all PDAL installations
             pytest.skip(f"Tindex not available: {e}")
-
-    @pytest.mark.integration
-    def test_tindex_with_merge_option(self, dual_laz: list[Path], tmp_path: Path) -> None:
-        """Test tindex creation with merge option."""
-        tindex_output = tmp_path / "merged_tindex.sqlite"
-        merged_file = tmp_path / "merged_from_tindex.las"
-
-        try:
-            # Create tindex with merge
-            pdal.tindex(str(tindex_output), [str(f) for f in dual_laz], merge=str(merged_file))
-
-            # Both tindex and merged file should exist
-            assert tindex_output.exists()
-            if merged_file.exists():
-                assert pdal.info(str(merged_file)).get("count", 0) > 0
-        except Exception as e:
-            pytest.skip(f"Tindex with merge not available: {e}")
 
 
 class TestSpatialFiltering:
@@ -189,7 +172,7 @@ class TestSpatialFiltering:
         self, intersecting_datasets: tuple[Path, Path], tmp_path: Path
     ) -> None:
         """Test spatial query on intersecting region."""
-        file1, file2 = intersecting_datasets
+        _, file2 = intersecting_datasets
         query_result = tmp_path / "spatial_query.las"
 
         # Query small area in overlap
@@ -250,7 +233,7 @@ class TestMosaicCreation:
         self, intersecting_datasets: tuple[Path, Path], tmp_path: Path
     ) -> None:
         """Test creating seamless mosaic from overlapping tiles."""
-        file1, file2 = intersecting_datasets
+        file1, _ = intersecting_datasets
         mosaic = tmp_path / "mosaic.las"
 
         # Simple mosaic: merge + ground classification

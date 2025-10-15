@@ -56,7 +56,7 @@ def skip_if_no_pdal() -> None:
 
 
 @pytest.fixture
-def small_laz(skip_if_no_test_data) -> Path:
+def small_laz(skip_if_no_test_data: None) -> Path:
     """Primary LAS sample (~85 MB) for general-purpose unit/integration tests."""
     if not LAZ_SMALL.exists():
         pytest.skip(f"Test file not found: {LAZ_SMALL}")
@@ -64,7 +64,7 @@ def small_laz(skip_if_no_test_data) -> Path:
 
 
 @pytest.fixture
-def medium_laz(skip_if_no_test_data) -> Path:
+def medium_laz(skip_if_no_test_data: None) -> Path:
     """Alias to the mid-size LAS dataset (same as small_laz)."""
     if not LAZ_MEDIUM.exists():
         pytest.skip(f"Test file not found: {LAZ_MEDIUM}")
@@ -72,7 +72,7 @@ def medium_laz(skip_if_no_test_data) -> Path:
 
 
 @pytest.fixture
-def large_laz(skip_if_no_test_data) -> Path:
+def large_laz(skip_if_no_test_data: None) -> Path:
     """High-density engineering dataset (>1B points) for stress tests."""
     if not LAZ_LARGE.exists():
         pytest.skip(f"Test file not found: {LAZ_LARGE}")
@@ -80,7 +80,7 @@ def large_laz(skip_if_no_test_data) -> Path:
 
 
 @pytest.fixture(scope="session")
-def dual_laz(skip_if_no_test_data, tmp_path_factory: pytest.TempPathFactory) -> list[Path]:
+def dual_laz(skip_if_no_test_data: None, tmp_path_factory: pytest.TempPathFactory) -> list[Path]:
     """Pair of LAS inputs for merge/tindex workflows (mid tile + cached copy)."""
     if not MID_LAS.exists():
         pytest.skip(f"Test file not found: {MID_LAS}")
@@ -97,7 +97,7 @@ def dual_laz(skip_if_no_test_data, tmp_path_factory: pytest.TempPathFactory) -> 
 
 
 @pytest.fixture
-def noisy_dataset(skip_if_no_test_data) -> Path:
+def noisy_dataset(skip_if_no_test_data: None) -> Path:
     """Non-filtered dataset for denoising tests (contains unclassified points).
 
     Uses sml-mid_copc_created (64MB, 8M points) which contains class 1 (unclassified)
@@ -109,7 +109,7 @@ def noisy_dataset(skip_if_no_test_data) -> Path:
 
 
 @pytest.fixture
-def large_noisy_dataset(skip_if_no_test_data) -> Path:
+def large_noisy_dataset(skip_if_no_test_data: None) -> Path:
     """Large non-filtered dataset for stress denoising tests.
 
     Uses lrg_copc_translated (618MB, 115M points) with full classification range 1-31.
@@ -121,7 +121,7 @@ def large_noisy_dataset(skip_if_no_test_data) -> Path:
 
 
 @pytest.fixture
-def small_copc(skip_if_no_test_data) -> Path:
+def small_copc(skip_if_no_test_data: None) -> Path:
     """Small COPC file for fast COPC-specific tests.
 
     Uses sml_copc_created (13MB, 1.7M points) with reclassified data.
@@ -133,7 +133,7 @@ def small_copc(skip_if_no_test_data) -> Path:
 
 
 @pytest.fixture
-def mid_copc(skip_if_no_test_data) -> Path:
+def mid_copc(skip_if_no_test_data: None) -> Path:
     """Medium COPC file for standard COPC tests.
 
     Uses mid_copc_translated (100MB, 14M points) - COPC version of mid_laz_original.
@@ -145,11 +145,11 @@ def mid_copc(skip_if_no_test_data) -> Path:
 
 
 @pytest.fixture
-def intersecting_datasets(skip_if_no_test_data) -> tuple[Path, Path]:
+def intersecting_datasets(skip_if_no_test_data: None) -> tuple[Path, Path]:
     """Pair of spatially overlapping datasets for merge/mosaic tests.
 
     Returns:
-        - mid_laz_original (85MB): 1km × 1km tile, pre-filtered
+        - mid_laz_original (85MB): 1km x 1km tile, pre-filtered
         - sml_copc_created (13MB): Larger area encompassing mid tile, reclassified
 
     Both datasets cover the same spatial extent (X 785000-786000, Y 5350000-5351000)
@@ -164,7 +164,7 @@ def intersecting_datasets(skip_if_no_test_data) -> tuple[Path, Path]:
 
 
 @pytest.fixture
-def large_performance_dataset(skip_if_no_test_data) -> Path:
+def large_performance_dataset(skip_if_no_test_data: None) -> Path:
     """Large dataset for performance benchmarking (1.1GB, 115M points).
 
     Uses lrg_laz_original - unfiltered engineering-grade survey data.
@@ -195,7 +195,7 @@ def pdal_version() -> str:
 
 
 @pytest.fixture(scope="session")
-def writer_test_laz(skip_if_no_test_data) -> Path:
+def writer_test_laz(skip_if_no_test_data: None) -> Path:
     """Baseline LAS input for writer tests (mid tile from Bavaria open data)."""
     if not MID_LAS.exists():
         pytest.skip(f"Test file not found: {MID_LAS}")
