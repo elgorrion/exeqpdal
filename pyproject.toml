@@ -124,7 +124,10 @@ addopts = [
 ]
 markers = [
     "integration: marks tests as integration tests (require real PDAL CLI)",
-    "slow: marks tests as slow-running tests (may take >10 seconds)",
+    "slow: marks tests as slow-running tests (may take >30 seconds)",
+    "benchmark: marks performance benchmark tests (1-10 minutes, use large datasets)",
+    "copc: marks COPC-specific tests (Cloud Optimized Point Cloud format)",
+    "denoising: marks noise removal and outlier detection tests",
     "database: marks tests requiring database setup (PostgreSQL PointCloud, TileDB)",
 ]
 

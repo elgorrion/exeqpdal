@@ -27,6 +27,7 @@ class TestGroundClassificationWorkflow:
     """Test complete ground classification workflows."""
 
     @pytest.mark.integration
+    @pytest.mark.slow
     @pytest.mark.usefixtures("skip_if_no_pdal")
     def test_smrf_ground_classification(self, medium_laz: Path, tmp_path: Path) -> None:
         """Test complete SMRF ground classification workflow.
@@ -48,6 +49,7 @@ class TestGroundClassificationWorkflow:
         assert output.stat().st_size > 0
 
     @pytest.mark.integration
+    @pytest.mark.slow
     @pytest.mark.usefixtures("skip_if_no_pdal")
     def test_pmf_ground_classification(self, medium_laz: Path, tmp_path: Path) -> None:
         """Test PMF ground classification workflow.
@@ -105,6 +107,7 @@ class TestHAGWorkflow:
     """Test Height Above Ground (HAG) workflows."""
 
     @pytest.mark.integration
+    @pytest.mark.slow
     @pytest.mark.usefixtures("skip_if_no_pdal")
     def test_hag_nn_workflow(self, medium_laz: Path, tmp_path: Path) -> None:
         """Test HAG calculation with nearest neighbor.

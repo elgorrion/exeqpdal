@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import shutil
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -11,15 +12,26 @@ import pytest
 
 from exeqpdal.exceptions import PDALExecutionError
 
-# LAZ test data constants
-LAZ_DIR = Path(os.environ.get("EXEQPDAL_TEST_DATA", "/tmp/exeqpdal_test_data"))
+# LAZ / COPC test data constants
+DEFAULT_DATA_DIR = Path(__file__).parent / "test_data_laz"
+LAZ_DIR = (
+    Path(os.environ["EXEQPDAL_TEST_DATA"])
+    if os.environ.get("EXEQPDAL_TEST_DATA")
+    else DEFAULT_DATA_DIR
+)
 
-# File mapping
-LAZ_SMALL = LAZ_DIR / "785_5351.laz"
-LAZ_MEDIUM = LAZ_DIR / "785_5350.laz"
-LAZ_LARGE = LAZ_DIR / "786_5348.laz"
-LAZ_DUAL_1 = LAZ_DIR / "786_5349.laz"
-LAZ_DUAL_2 = LAZ_DIR / "786_5350.laz"
+# Canonical datasets
+MID_LAS = LAZ_DIR / "mid_laz_original.laz"
+MID_COPC = LAZ_DIR / "mid_copc_translated.copc.laz"
+LARGE_LAS = LAZ_DIR / "lrg_laz_original.laz"
+LARGE_COPC = LAZ_DIR / "lrg_copc_translated.copc.laz"
+SMALL_COPC = LAZ_DIR / "sml_copc_created.copc.laz"
+SMALL_MID_COPC = LAZ_DIR / "sml-mid_copc_created.copc.laz"
+
+# Legacy fixture aliases for backwards compatibility
+LAZ_SMALL = MID_LAS
+LAZ_MEDIUM = MID_LAS
+LAZ_LARGE = LARGE_LAS
 
 # Writer test outputs (moved from laz_to_writers/conftest.py)
 OUTPUT_BASE = Path(__file__).parent / "laz_to_writers" / "outputs"
@@ -27,9 +39,9 @@ OUTPUT_BASE = Path(__file__).parent / "laz_to_writers" / "outputs"
 
 @pytest.fixture(scope="session")
 def skip_if_no_test_data() -> None:
-    """Skip test if EXEQPDAL_TEST_DATA environment variable not set."""
-    if not os.environ.get("EXEQPDAL_TEST_DATA"):
-        pytest.skip("EXEQPDAL_TEST_DATA environment variable not set")
+    """Skip tests if the packaged point cloud datasets are unavailable."""
+    if not LAZ_DIR.exists():
+        pytest.skip(f"Test data directory not available: {LAZ_DIR}")
 
 
 @pytest.fixture
@@ -45,11 +57,7 @@ def skip_if_no_pdal() -> None:
 
 @pytest.fixture
 def small_laz(skip_if_no_test_data) -> Path:
-    """Small LAZ file for quick tests (~55MB, ~8M points).
-
-    File: 785_5351.laz
-    Use for: Basic execution tests, quick validation
-    """
+    """Primary LAS sample (~85 MB) for general-purpose unit/integration tests."""
     if not LAZ_SMALL.exists():
         pytest.skip(f"Test file not found: {LAZ_SMALL}")
     return LAZ_SMALL
@@ -57,11 +65,7 @@ def small_laz(skip_if_no_test_data) -> Path:
 
 @pytest.fixture
 def medium_laz(skip_if_no_test_data) -> Path:
-    """Medium LAZ file for moderate tests (~85MB, ~13M points).
-
-    File: 785_5350.laz
-    Use for: Filter tests, moderate complexity
-    """
+    """Alias to the mid-size LAS dataset (same as small_laz)."""
     if not LAZ_MEDIUM.exists():
         pytest.skip(f"Test file not found: {LAZ_MEDIUM}")
     return LAZ_MEDIUM
@@ -69,28 +73,107 @@ def medium_laz(skip_if_no_test_data) -> Path:
 
 @pytest.fixture
 def large_laz(skip_if_no_test_data) -> Path:
-    """Large LAZ file for performance tests (~144MB, ~23M points).
-
-    File: 786_5348.laz
-    Use for: Performance tests, streaming validation
-    """
+    """High-density engineering dataset (>1B points) for stress tests."""
     if not LAZ_LARGE.exists():
         pytest.skip(f"Test file not found: {LAZ_LARGE}")
     return LAZ_LARGE
 
 
-@pytest.fixture
-def dual_laz(skip_if_no_test_data) -> list[Path]:
-    """Two LAZ files for merge/batch tests.
+@pytest.fixture(scope="session")
+def dual_laz(skip_if_no_test_data, tmp_path_factory: pytest.TempPathFactory) -> list[Path]:
+    """Pair of LAS inputs for merge/tindex workflows (mid tile + cached copy)."""
+    if not MID_LAS.exists():
+        pytest.skip(f"Test file not found: {MID_LAS}")
 
-    Files: 786_5349.laz (~49MB), 786_5350.laz (~50MB)
-    Use for: Merge tests, batch operations
+    cache_dir = tmp_path_factory.mktemp("dual_laz_cache")
+    copy_path = cache_dir / "mid_laz_copy.laz"
+    if not copy_path.exists():
+        shutil.copy(MID_LAS, copy_path)
+
+    return [MID_LAS, copy_path]
+
+
+# === New fixtures for enhanced test coverage ===
+
+
+@pytest.fixture
+def noisy_dataset(skip_if_no_test_data) -> Path:
+    """Non-filtered dataset for denoising tests (contains unclassified points).
+
+    Uses sml-mid_copc_created (64MB, 8M points) which contains class 1 (unclassified)
+    and classes up to 31. Suitable for noise removal and outlier detection tests.
     """
-    files = [LAZ_DUAL_1, LAZ_DUAL_2]
-    missing = [f for f in files if not f.exists()]
-    if missing:
-        pytest.skip(f"Test files not found: {', '.join(str(f) for f in missing)}")
-    return files
+    if not SMALL_MID_COPC.exists():
+        pytest.skip(f"Test file not found: {SMALL_MID_COPC}")
+    return SMALL_MID_COPC
+
+
+@pytest.fixture
+def large_noisy_dataset(skip_if_no_test_data) -> Path:
+    """Large non-filtered dataset for stress denoising tests.
+
+    Uses lrg_copc_translated (618MB, 115M points) with full classification range 1-31.
+    Contains unclassified points and extra dimensions (RIEGL, TerraScan attributes).
+    """
+    if not LARGE_COPC.exists():
+        pytest.skip(f"Test file not found: {LARGE_COPC}")
+    return LARGE_COPC
+
+
+@pytest.fixture
+def small_copc(skip_if_no_test_data) -> Path:
+    """Small COPC file for fast COPC-specific tests.
+
+    Uses sml_copc_created (13MB, 1.7M points) with reclassified data.
+    Ideal for streaming reader and index-aware tests.
+    """
+    if not SMALL_COPC.exists():
+        pytest.skip(f"Test file not found: {SMALL_COPC}")
+    return SMALL_COPC
+
+
+@pytest.fixture
+def mid_copc(skip_if_no_test_data) -> Path:
+    """Medium COPC file for standard COPC tests.
+
+    Uses mid_copc_translated (100MB, 14M points) - COPC version of mid_laz_original.
+    Pre-filtered data (classes 2, 6, 20 only).
+    """
+    if not MID_COPC.exists():
+        pytest.skip(f"Test file not found: {MID_COPC}")
+    return MID_COPC
+
+
+@pytest.fixture
+def intersecting_datasets(skip_if_no_test_data) -> tuple[Path, Path]:
+    """Pair of spatially overlapping datasets for merge/mosaic tests.
+
+    Returns:
+        - mid_laz_original (85MB): 1km × 1km tile, pre-filtered
+        - sml_copc_created (13MB): Larger area encompassing mid tile, reclassified
+
+    Both datasets cover the same spatial extent (X 785000-786000, Y 5350000-5351000)
+    making them ideal for testing merge operations, spatial indexing, and duplicate
+    point handling.
+    """
+    if not MID_LAS.exists():
+        pytest.skip(f"Test file not found: {MID_LAS}")
+    if not SMALL_COPC.exists():
+        pytest.skip(f"Test file not found: {SMALL_COPC}")
+    return (MID_LAS, SMALL_COPC)
+
+
+@pytest.fixture
+def large_performance_dataset(skip_if_no_test_data) -> Path:
+    """Large dataset for performance benchmarking (1.1GB, 115M points).
+
+    Uses lrg_laz_original - unfiltered engineering-grade survey data.
+    Contains extra dimensions (RIEGL and TerraScan attributes).
+    Expected runtime: 1-10 minutes depending on operation.
+    """
+    if not LARGE_LAS.exists():
+        pytest.skip(f"Test file not found: {LARGE_LAS}")
+    return LARGE_LAS
 
 
 @pytest.fixture
@@ -113,19 +196,10 @@ def pdal_version() -> str:
 
 @pytest.fixture(scope="session")
 def writer_test_laz(skip_if_no_test_data) -> Path:
-    """LAZ file optimized for writer tests (49MB, 10.9M points).
-
-    File: 786_5349.laz
-    - Points: 10,924,069
-    - Size: 49 MB
-    - Format: LAS 1.2, Point Format 1
-    - Bounds: 1000m x 1000m x 47m
-    - Density: 10.67 points/m²
-    """
-    laz_file = LAZ_DIR / "786_5349.laz"
-    if not laz_file.exists():
-        pytest.skip(f"Test file not found: {laz_file}")
-    return laz_file
+    """Baseline LAS input for writer tests (mid tile from Bavaria open data)."""
+    if not MID_LAS.exists():
+        pytest.skip(f"Test file not found: {MID_LAS}")
+    return MID_LAS
 
 
 @pytest.fixture(scope="session")
@@ -164,7 +238,7 @@ This directory contains output files from LAZ-to-writers tests.
 **Files preserved for manual inspection** - DO NOT COMMIT.
 
 **Source**: tests/test_laz_to_*.py
-**Input**: /home/vona/QGIS_Projects/LAS_Sources/786_5349.laz (49MB, 10.9M points)
+**Input**: tests/test_data_laz/mid_laz_original.laz (~85 MB, ~14 M points)
 """)
 
     return output_dir
@@ -178,7 +252,7 @@ def get_output_filename(
 ) -> str:
     """Generate consistent output filename.
 
-    Format: 786_5349_{writer_name}_{config_id}_{timestamp}.{extension}
+    Format: mid_laz_original_{writer_name}_{config_id}_{timestamp}.{extension}
 
     Args:
         category: Subdirectory (standard, text, raster, special)
@@ -190,7 +264,7 @@ def get_output_filename(
         Full path to output file as string
     """
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    base_name = "786_5349"
+    base_name = "mid_laz_original"
 
     if config_id:
         filename = f"{base_name}_{writer_name}_{config_id}_{timestamp}"

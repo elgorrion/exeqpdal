@@ -10,19 +10,15 @@ import exeqpdal as pdal
 
 pytestmark = [pytest.mark.integration, pytest.mark.slow, pytest.mark.usefixtures("skip_if_no_pdal")]
 
-LAZ_SOURCE_DIR = Path("/home/vona/QGIS_Projects/LAS_Sources")
+DATA_DIR = Path(__file__).parent / "test_data_laz"
+PRIMARY_LAS = DATA_DIR / "mid_laz_original.laz"
+SECONDARY_LAS = DATA_DIR / "mid_laz_original.laz"
 
 
-def _require_source_file(filename: str) -> Path:
-    path = LAZ_SOURCE_DIR / filename
+def _require(path: Path) -> Path:
     if not path.exists():
-        pytest.skip(f"Required LAZ file not found: {path}")
+        pytest.skip(f"Required point cloud not found: {path}")
     return path
-
-
-def _ensure_source_dir() -> None:
-    if not LAZ_SOURCE_DIR.exists():
-        pytest.skip(f"LAZ source directory not available: {LAZ_SOURCE_DIR}")
 
 
 def _get_point_count(path: Path) -> int:
@@ -37,8 +33,7 @@ def test_docs_examples_ground_classification(
     tmp_path: Path,
 ) -> None:
     """Run the ground classification examples end-to-end."""
-    _ensure_source_dir()
-    input_file = _require_source_file("784_5350.laz")
+    input_file = _require(PRIMARY_LAS)
 
     classified = tmp_path / "classified.las"
     ground_only = tmp_path / "ground_only.las"
@@ -80,8 +75,7 @@ def test_docs_examples_point_cloud_processing(
     tmp_path: Path,
 ) -> None:
     """Run the point cloud processing examples from the documentation."""
-    _ensure_source_dir()
-    input_file = _require_source_file("784_5350.laz")
+    input_file = _require(PRIMARY_LAS)
 
     clean_output = tmp_path / "clean.las"
     clean_pipeline = pdal.Pipeline(
@@ -126,9 +120,8 @@ def test_docs_examples_format_conversion(
     tmp_path: Path,
 ) -> None:
     """Verify the translate and merge examples."""
-    _ensure_source_dir()
-    input_file = _require_source_file("784_5350.laz")
-    other_file = _require_source_file("785_5351.laz")
+    input_file = _require(PRIMARY_LAS)
+    other_file = _require(SECONDARY_LAS)
 
     translated = tmp_path / "output.laz"
     pdal.translate(str(input_file), str(translated))
@@ -146,8 +139,7 @@ def test_docs_examples_advanced_pipelines(
     tmp_path: Path,
 ) -> None:
     """Execute the advanced pipelines from the documentation."""
-    _ensure_source_dir()
-    input_file = _require_source_file("784_5350.laz")
+    input_file = _require(PRIMARY_LAS)
 
     buildings_output = tmp_path / "buildings.las"
     building_pipeline = pdal.Pipeline(
