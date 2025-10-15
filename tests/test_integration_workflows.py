@@ -20,6 +20,8 @@ from exeqpdal import Pipeline
 if TYPE_CHECKING:
     from pathlib import Path
 
+pytestmark = [pytest.mark.integration, pytest.mark.slow, pytest.mark.usefixtures("skip_if_no_pdal")]
+
 
 class TestGroundClassificationWorkflow:
     """Test complete ground classification workflows."""

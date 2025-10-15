@@ -29,15 +29,16 @@ import os
 from typing import TYPE_CHECKING
 
 import pytest
-
-if TYPE_CHECKING:
-    from pathlib import Path
-
 from conftest import handle_writer_exception
 
 import exeqpdal as pdal
 from exeqpdal import Pipeline
 from exeqpdal.exceptions import PDALExecutionError
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+pytestmark = [pytest.mark.integration, pytest.mark.slow, pytest.mark.usefixtures("skip_if_no_pdal")]
 
 
 @pytest.mark.skip(reason="Database writers require database setup - see docstring for details")

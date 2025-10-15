@@ -8,6 +8,8 @@ import pytest
 
 import exeqpdal as pdal
 
+pytestmark = [pytest.mark.integration, pytest.mark.slow, pytest.mark.usefixtures("skip_if_no_pdal")]
+
 LAZ_SOURCE_DIR = Path("/home/vona/QGIS_Projects/LAS_Sources")
 
 
@@ -31,10 +33,8 @@ def _get_point_count(path: Path) -> int:
     return int(info.get("count", 0))
 
 
-@pytest.mark.integration
 def test_docs_examples_ground_classification(
     tmp_path: Path,
-    skip_if_no_pdal: None,
 ) -> None:
     """Run the ground classification examples end-to-end."""
     _ensure_source_dir()
@@ -76,10 +76,8 @@ def test_docs_examples_ground_classification(
     assert dtm.exists()
 
 
-@pytest.mark.integration
 def test_docs_examples_point_cloud_processing(
     tmp_path: Path,
-    skip_if_no_pdal: None,
 ) -> None:
     """Run the point cloud processing examples from the documentation."""
     _ensure_source_dir()
@@ -124,10 +122,8 @@ def test_docs_examples_point_cloud_processing(
     assert decimated_count_again < original_count
 
 
-@pytest.mark.integration
 def test_docs_examples_format_conversion(
     tmp_path: Path,
-    skip_if_no_pdal: None,
 ) -> None:
     """Verify the translate and merge examples."""
     _ensure_source_dir()
@@ -146,10 +142,8 @@ def test_docs_examples_format_conversion(
     assert merged_count > 0
 
 
-@pytest.mark.integration
 def test_docs_examples_advanced_pipelines(
     tmp_path: Path,
-    skip_if_no_pdal: None,
 ) -> None:
     """Execute the advanced pipelines from the documentation."""
     _ensure_source_dir()

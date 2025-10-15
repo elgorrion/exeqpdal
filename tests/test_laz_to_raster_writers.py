@@ -30,10 +30,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import pytest
-
-if TYPE_CHECKING:
-    from pathlib import Path
-
 from conftest import (
     get_output_filename,
     handle_writer_exception,
@@ -43,6 +39,11 @@ from conftest import (
 import exeqpdal as pdal
 from exeqpdal import Pipeline
 from exeqpdal.exceptions import PDALExecutionError
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+pytestmark = [pytest.mark.integration, pytest.mark.slow, pytest.mark.usefixtures("skip_if_no_pdal")]
 
 # Test configurations: (writer_name, extension, options)
 RASTER_WRITERS: list[tuple[str, str, dict[str, float | str]]] = [
