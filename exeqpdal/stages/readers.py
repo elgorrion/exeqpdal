@@ -21,9 +21,9 @@ class Reader:
         return ReaderStage("readers.bpf", filename=filename, **options)
 
     @staticmethod
-    def buffer(filename: str, **options: Any) -> ReaderStage:
+    def buffer(**options: Any) -> ReaderStage:
         """Read from memory buffer."""
-        return ReaderStage("readers.buffer", filename=filename, **options)
+        return ReaderStage("readers.buffer", **options)
 
     @staticmethod
     def copc(filename: str, **options: Any) -> ReaderStage:
@@ -121,9 +121,9 @@ class Reader:
         return ReaderStage("readers.pcd", filename=filename, **options)
 
     @staticmethod
-    def pgpointcloud(filename: str, **options: Any) -> ReaderStage:
+    def pgpointcloud(**options: Any) -> ReaderStage:
         """Read from PostgreSQL PointCloud database."""
-        return ReaderStage("readers.pgpointcloud", filename=filename, **options)
+        return ReaderStage("readers.pgpointcloud", **options)
 
     @staticmethod
     def ply(filename: str, **options: Any) -> ReaderStage:

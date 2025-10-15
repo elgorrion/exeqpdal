@@ -460,3 +460,9 @@ class Filter:
     def julia(**options: Any) -> FilterStage:
         """Julia script filter."""
         return FilterStage("filters.julia", **options)
+
+    # Streaming filters
+    @staticmethod
+    def streamcallback(**options: Any) -> FilterStage:
+        """Streaming callback filter."""
+        return FilterStage("filters.streamcallback", **options)

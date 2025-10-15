@@ -31,9 +31,9 @@ class Writer:
         return WriterStage("writers.draco", filename=filename, **options)
 
     @staticmethod
-    def ept_addon(filename: str, **options: Any) -> WriterStage:
+    def ept_addon(**options: Any) -> WriterStage:
         """Write EPT addon data."""
-        return WriterStage("writers.ept_addon", filename=filename, **options)
+        return WriterStage("writers.ept_addon", **options)
 
     @staticmethod
     def e57(filename: str, **options: Any) -> WriterStage:
@@ -76,9 +76,9 @@ class Writer:
         return WriterStage("writers.nitf", filename=filename, **options)
 
     @staticmethod
-    def null(filename: str | None = None, **options: Any) -> WriterStage:
+    def null(**options: Any) -> WriterStage:
         """Null writer (discards output, useful for testing)."""
-        return WriterStage("writers.null", filename=filename, **options)
+        return WriterStage("writers.null", **options)
 
     @staticmethod
     def ogr(filename: str, **options: Any) -> WriterStage:
@@ -91,9 +91,9 @@ class Writer:
         return WriterStage("writers.pcd", filename=filename, **options)
 
     @staticmethod
-    def pgpointcloud(filename: str, **options: Any) -> WriterStage:
+    def pgpointcloud(**options: Any) -> WriterStage:
         """Write to PostgreSQL PointCloud database."""
-        return WriterStage("writers.pgpointcloud", filename=filename, **options)
+        return WriterStage("writers.pgpointcloud", **options)
 
     @staticmethod
     def ply(filename: str, **options: Any) -> WriterStage:
@@ -116,9 +116,11 @@ class Writer:
         return WriterStage("writers.text", filename=filename, **options)
 
     @staticmethod
-    def tiledb(filename: str, **options: Any) -> WriterStage:
+    def tiledb(array_name: str | None = None, **options: Any) -> WriterStage:
         """Write TileDB arrays."""
-        return WriterStage("writers.tiledb", filename=filename, **options)
+        if array_name is not None:
+            options.setdefault("array_name", array_name)
+        return WriterStage("writers.tiledb", **options)
 
 
 # Convenience aliases

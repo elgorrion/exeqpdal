@@ -131,6 +131,23 @@ class TestReaders:
         reader = pdal.Reader.las("input.las", spatialreference="EPSG:4326")
         assert reader.options["spatialreference"] == "EPSG:4326"
 
+    def test_reader_buffer_without_filename(self) -> None:
+        """Buffer reader should not inject filename into pipeline."""
+        reader = pdal.Reader.buffer(data="dummy")
+        assert reader.stage_type == "readers.buffer"
+        assert reader.filename is None
+        assert "filename" not in reader.to_dict()
+
+    def test_reader_pgpointcloud_without_filename(self) -> None:
+        """pgpointcloud reader relies on connection options, not filenames."""
+        reader = pdal.Reader.pgpointcloud(
+            connection="postgresql://user:pass@localhost/db",
+            table="pcpatches",
+        )
+        assert reader.stage_type == "readers.pgpointcloud"
+        assert reader.filename is None
+        assert "filename" not in reader.to_dict()
+
 
 class TestFilters:
     """Tests for filter factory."""
@@ -160,6 +177,12 @@ class TestFilters:
         )
         assert filter_stage.stage_type == "filters.reprojection"
 
+    def test_filter_streamcallback(self) -> None:
+        """Test stream callback filter creation."""
+        filter_stage = pdal.Filter.streamcallback(where="Classification[2:2]")
+        assert filter_stage.stage_type == "filters.streamcallback"
+        assert filter_stage.options["where"] == "Classification[2:2]"
+
 
 class TestWriters:
     """Tests for writer factory."""
@@ -179,6 +202,37 @@ class TestWriters:
         """Test writer with compression."""
         writer = pdal.Writer.las("output.laz", compression="laszip")
         assert writer.options["compression"] == "laszip"
+
+    def test_writer_null_without_filename(self) -> None:
+        """Null writer should not inject filename."""
+        writer = pdal.Writer.null()
+        assert writer.stage_type == "writers.null"
+        assert writer.filename is None
+        assert "filename" not in writer.to_dict()
+
+    def test_writer_pgpointcloud_without_filename(self) -> None:
+        """pgpointcloud writer relies on database connection options."""
+        writer = pdal.Writer.pgpointcloud(
+            connection="postgresql://user:pass@localhost/db",
+            table="pcpatches",
+        )
+        assert writer.stage_type == "writers.pgpointcloud"
+        assert writer.filename is None
+        assert "filename" not in writer.to_dict()
+
+    def test_writer_ept_addon_without_filename(self) -> None:
+        """EPT addon writer stores addon mapping without filename."""
+        writer = pdal.Writer.ept_addon(addons={"Autzen": "autzen-smrf.las"})
+        assert writer.stage_type == "writers.ept_addon"
+        assert writer.filename is None
+        assert "filename" not in writer.to_dict()
+
+    def test_writer_tiledb_array_name_alias(self) -> None:
+        """TileDB writer treats positional argument as array_name."""
+        writer = pdal.Writer.tiledb("tiledb:///arrays/demo", append=True)
+        assert writer.stage_type == "writers.tiledb"
+        assert writer.filename is None
+        assert writer.options["array_name"] == "tiledb:///arrays/demo"
 
 
 class TestPipeline:

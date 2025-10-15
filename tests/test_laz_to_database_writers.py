@@ -72,11 +72,9 @@ def test_pgpointcloud_writer(
         )
 
     # Create pipeline
-    # Note: pgpointcloud doesn't actually use filename, but API requires it
     pipeline = Pipeline(
         pdal.Reader.las(str(writer_test_laz))
         | pdal.Writer.pgpointcloud(
-            "",  # Empty filename - connection and table are the real outputs
             connection=connection,
             table="test_writer_output",
             overwrite=True,
@@ -125,7 +123,9 @@ def test_tiledb_writer(
     tiledb_path = os.getenv("TEST_TILEDB_PATH", str(writer_output_dir / "tiledb_output"))
 
     # Create pipeline
-    pipeline = Pipeline(pdal.Reader.las(str(writer_test_laz)) | pdal.Writer.tiledb(tiledb_path))
+    pipeline = Pipeline(
+        pdal.Reader.las(str(writer_test_laz)) | pdal.Writer.tiledb(array_name=str(tiledb_path))
+    )
 
     # Execute
     try:
