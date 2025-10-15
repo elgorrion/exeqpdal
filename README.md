@@ -83,7 +83,7 @@ For more examples, see the [examples documentation](docs/examples.md).
 ## Supported Components
 
 Factory helpers cover the most commonly used PDAL readers, writers, and filters. For the definitive
-driver reference, consult the [PDAL documentation](https://pdal.io/en/stable/stages/index.html). If a
+driver reference, consult the [PDAL documentation](https://pdal.io/en/stable/stages/stages.html). If a
 driver is missing, you can still run it by injecting raw dictionaries into a `Pipeline`.
 
 ## Error Handling
