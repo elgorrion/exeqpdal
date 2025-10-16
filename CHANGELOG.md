@@ -7,6 +7,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and
 
 ## [Unreleased]
 
+## [0.1.0a1] - 2025-10-16
+
 `exeqpdal 0.1.0a1` is under active development and has not yet been published to PyPI.
 
 ### Added
