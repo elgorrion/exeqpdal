@@ -27,10 +27,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and
   directory.
 - Strict typing enforced via `mypy --strict`.
 
+### Tooling
+- Added GitHub Actions for CI (`ci.yml`) and publishing (`publish.yml`), plus a release guide
+  (`docs/publishing.md`) and supporting development dependencies.
+
 ### Known Limitations
 - `Pipeline.arrays` is not yet implemented and currently returns an empty list.
 - Stage factories do not yet expose every PDAL driver; unsupported stages can be invoked with custom
   JSON.
-- Publishing workflow is not finalised; installation is currently from source.
+- First PyPI upload is still pending while the initial alpha stabilises.
 
 ---

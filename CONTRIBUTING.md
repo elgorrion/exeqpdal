@@ -60,6 +60,12 @@ Thank you for your interest in contributing to `exeqpdal`! All contributions are
 -   Open a pull request that explains the scenario, any data prerequisites, and how you validated the
     change.
 
+## Release Management
+
+Maintainers preparing a PyPI upload should follow the checklist in `docs/publishing.md`. It covers
+versioning, changelog updates, local validation (`ruff`, `mypy`, `pytest`, `python -m build`), and
+the GitHub Actions workflow that publishes releases through PyPI's Trusted Publisher integration.
+
 ## Code Style
 
 This project uses `ruff` for both formatting and linting with the settings defined in

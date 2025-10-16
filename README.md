@@ -3,23 +3,24 @@
 Alpha-stage, typed Python API for driving the PDAL command-line interface (CLI).
 
 `exeqpdal` focuses on being a reliable subprocess wrapper around the PDAL CLI so that Python
-projects – including QGIS plugins – can assemble and run PDAL pipelines without shipping C++
-bindings. The current release series is `0.1.0a*` and is still stabilising APIs and coverage.
+projects – including QGIS plugins – can assemble and run PDAL pipelines without shipping
+C++ bindings. The current release series is `0.1.0a*` and is still stabilising APIs and
+coverage.
 
 ## Features
 
--   **Pythonic pipelines** – build PDAL JSON using `Reader`, `Filter`, and `Writer` factories chained
-    with the `|` operator, then execute with `Pipeline`.
--   **CLI-first design** – no native extensions; every operation delegates to the PDAL executable via
-    `subprocess.run`.
--   **Strict typing** – the package ships `py.typed`, is developed under `mypy --strict`, and exposes
-    typed factory helpers.
+-   **Pythonic pipelines** – build PDAL JSON using `Reader`, `Filter`, and `Writer`
+    factories chained with the `|` operator, then execute with `Pipeline`.
+-   **CLI-first design** – no native extensions; every operation delegates to the PDAL
+    executable via `subprocess.run`.
+-   **Strict typing** – the package ships `py.typed`, is developed under `mypy --strict`,
+    and exposes typed factory helpers.
 -   **Convenience apps** – wrappers for PDAL tools such as `info`, `translate`, `merge`, `split`,
     `tile`, and `tindex`.
 -   **Broad stage coverage** – factories currently expose ~40 readers, 80+ filters, and 25 writers.
     Coverage is expanding; unsupported drivers can still be addressed through custom JSON.
--   **QGIS-friendly** – automatic PDAL discovery checks PATH, `PDAL_EXECUTABLE`, and common QGIS 3.4x
-    Windows installs.
+-   **QGIS-friendly** – automatic PDAL discovery checks PATH, `PDAL_EXECUTABLE`, and
+    common QGIS 3.4x Windows installs.
 
 ## Prerequisites
 
@@ -29,21 +30,21 @@ bindings. The current release series is `0.1.0a*` and is still stabilising APIs 
 
 ## Installation
 
-`exeqpdal` is being prepared for its first public upload. Until the package is published to PyPI,
-install from source:
+The first public alpha will be published to PyPI using GitHub Actions. Once the release is
+live, you can install it directly (include `--pre` while the project is in alpha):
 
 ```bash
-# Clone the repository, then from the project root:
+pip install --pre exeqpdal
+```
+
+Until the package is uploaded, install from a local clone:
+
+```bash
+# From the project root
 pip install -e .
 
 # Or install with development extras
 uv pip install -e ".[dev]"
-```
-
-Once a release is published, the standard installation command will be:
-
-```bash
-pip install exeqpdal
 ```
 
 ## Quick Start
@@ -82,9 +83,10 @@ For more examples, see the [examples documentation](docs/examples.md).
 
 ## Supported Components
 
-Factory helpers cover the most commonly used PDAL readers, writers, and filters. For the definitive
-driver reference, consult the [PDAL documentation](https://pdal.io/en/stable/stages/stages.html). If a
-driver is missing, you can still run it by injecting raw dictionaries into a `Pipeline`.
+Factory helpers cover the most commonly used PDAL readers, writers, and filters. For the
+definitive driver reference, consult the
+[PDAL documentation](https://pdal.io/en/stable/stages/stages.html). If a driver is
+missing, you can still run it by injecting raw dictionaries into a `Pipeline`.
 
 ## Error Handling
 
@@ -139,6 +141,8 @@ pdal.set_verbose(True)
 
 `exeqpdal` is licensed under the MIT License.
 
-This project is a wrapper around the PDAL command-line tool, which is licensed under the BSD license. When using `exeqpdal`, you are also using PDAL, and you should be aware of its license.
+This project is a wrapper around the PDAL command-line tool, which is licensed under the
+BSD license. When using `exeqpdal`, you are also using PDAL, and you should be aware of
+its license.
 
 If you are using `exeqpdal` in a QGIS plugin, you should also be aware of the QGIS license (GPLv2+).
