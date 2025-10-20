@@ -70,8 +70,18 @@ class Pipeline:
             self._pipeline_json = json.dumps(pipeline, indent=2)
 
         elif isinstance(pipeline, list):
-            # List of stages
-            self._pipeline_dict = {"pipeline": pipeline}
+            # List of stages or dicts - handle both
+            stage_list = []
+            for item in pipeline:
+                if isinstance(item, Stage):
+                    stage_list.append(item.to_dict())
+                elif isinstance(item, dict):
+                    stage_list.append(item)
+                else:
+                    raise PipelineError(
+                        f"Invalid pipeline list item: {type(item)}. Expected Stage or dict"
+                    )
+            self._pipeline_dict = {"pipeline": stage_list}
             self._pipeline_json = json.dumps(self._pipeline_dict, indent=2)
 
         elif isinstance(pipeline, Stage):

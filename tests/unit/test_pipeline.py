@@ -48,6 +48,35 @@ class TestPipelineParsing:
         pipeline = pdal.Pipeline(final_stage)
         assert "pipeline" in pipeline._pipeline_dict
 
+    def test_pipeline_from_stage_list(self) -> None:
+        """Pipeline constructor should accept list of Stage objects."""
+        stages = [
+            pdal.Reader.las("input1.las"),
+            pdal.Reader.las("input2.las"),
+            pdal.Filter.merge(),
+            pdal.Writer.las("output.las"),
+        ]
+
+        # Should not raise "not JSON serializable"
+        pipeline = pdal.Pipeline(stages)
+
+        # Verify pipeline structure
+        assert "pipeline" in pipeline._pipeline_dict
+        assert len(pipeline._pipeline_dict["pipeline"]) == 4
+        assert pipeline._pipeline_dict["pipeline"][0]["type"] == "readers.las"
+        assert pipeline._pipeline_dict["pipeline"][2]["type"] == "filters.merge"
+
+    def test_pipeline_from_mixed_list(self) -> None:
+        """Pipeline constructor should accept mix of Stage objects and dicts."""
+        stages = [
+            pdal.Reader.las("input.las"),  # Stage object
+            {"type": "filters.range", "limits": "Classification[2:2]"},  # Dict
+            pdal.Writer.las("output.las"),  # Stage object
+        ]
+
+        pipeline = pdal.Pipeline(stages)
+        assert len(pipeline._pipeline_dict["pipeline"]) == 3
+
     def test_pipeline_invalid_type(self) -> None:
         with pytest.raises(PipelineError, match="Invalid pipeline type"):
             pdal.Pipeline(123)  # type: ignore[arg-type]
