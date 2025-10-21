@@ -7,6 +7,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and
 
 ## [Unreleased]
 
+## [0.1.0a3] - 2025-10-21
+
+### Fixed
+- Hide subprocess console windows on Windows for better user experience
+- Version-independent QGIS/PDAL discovery on Windows using dynamic glob patterns
+
 ## [0.1.0a2] - 2025-10-20
 
 ### Fixed

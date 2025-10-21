@@ -14,6 +14,10 @@ from exeqpdal.exceptions import ConfigurationError, PDALNotFoundError
 
 logger = logging.getLogger(__name__)
 
+_SUBPROCESS_FLAGS = (
+    getattr(subprocess, "CREATE_NO_WINDOW", 0) if platform.system() == "Windows" else 0
+)
+
 
 class Config:
     """Global configuration for exeqpdal."""
@@ -146,20 +150,20 @@ class Config:
         if platform.system() != "Windows":
             return None
 
-        # Common QGIS installation paths
-        qgis_paths = [
-            Path(os.environ.get("QGIS_PREFIX_PATH", "")),
-            Path("C:/Program Files/QGIS 3.40"),
-            Path("C:/Program Files/QGIS 3.42"),
-            Path("C:/Program Files/QGIS 3.44"),
-            Path("C:/OSGeo4W64"),
-            Path("C:/OSGeo4W"),
-        ]
+        qgis_paths: list[Path] = []
 
-        # Add QGIS paths from environment
         osgeo_root = os.environ.get("OSGEO4W_ROOT")
         if osgeo_root:
-            qgis_paths.insert(0, Path(osgeo_root))
+            qgis_paths.append(Path(osgeo_root))
+
+        qgis_prefix = os.environ.get("QGIS_PREFIX_PATH")
+        if qgis_prefix:
+            qgis_paths.append(Path(qgis_prefix))
+
+        program_files = Path("C:/Program Files")
+        if program_files.exists():
+            qgis_dirs = sorted(program_files.glob("QGIS*"), reverse=True)
+            qgis_paths.extend(qgis_dirs)
 
         for qgis_root in qgis_paths:
             if not qgis_root.exists():
@@ -194,6 +198,7 @@ class Config:
                 capture_output=True,
                 text=True,
                 check=True,
+                creationflags=_SUBPROCESS_FLAGS,
             )
             version_output = result.stdout.strip()
             logger.debug(f"PDAL version: {version_output}")

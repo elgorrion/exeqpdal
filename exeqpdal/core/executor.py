@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+import platform
 import subprocess
 import tempfile
 from pathlib import Path
@@ -13,6 +14,10 @@ from exeqpdal.core.config import config
 from exeqpdal.exceptions import PDALExecutionError
 
 logger = logging.getLogger(__name__)
+
+_SUBPROCESS_FLAGS = (
+    getattr(subprocess, "CREATE_NO_WINDOW", 0) if platform.system() == "Windows" else 0
+)
 
 
 class Executor:
@@ -85,6 +90,7 @@ class Executor:
                 capture_output=True,
                 text=True,
                 check=False,
+                creationflags=_SUBPROCESS_FLAGS,
             )
 
             # Read metadata if generated
@@ -162,6 +168,7 @@ class Executor:
             capture_output=True,
             text=True,
             check=False,
+            creationflags=_SUBPROCESS_FLAGS,
         )
 
         # Check for errors
@@ -217,6 +224,7 @@ class Executor:
                 capture_output=True,
                 text=True,
                 check=False,
+                creationflags=_SUBPROCESS_FLAGS,
             )
 
             is_valid = result.returncode == 0
@@ -256,6 +264,7 @@ class Executor:
             capture_output=True,
             text=True,
             check=False,
+            creationflags=_SUBPROCESS_FLAGS,
         )
 
         if result.returncode != 0:

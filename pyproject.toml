@@ -1,6 +1,6 @@
 [project]
 name = "exeqpdal"
-version = "0.1.0a2"
+version = "0.1.0a3"
 description = "Python API for executing PDAL CLI commands with native syntax support"
 authors = [
     {name = "ElGorrion", email = "elgorrion.eu@gmail.com"}
