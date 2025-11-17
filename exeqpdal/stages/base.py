@@ -39,25 +39,30 @@ class Stage(ABC):  # noqa: B024 - Concrete base class with ABC for semantic grou
 
         Returns:
             Stage dictionary for pipeline JSON
+
+        Note:
+            For linear chains created with pipe operator (single input),
+            inputs are omitted to allow PDAL's implicit sequential chaining.
+            Only multi-input stages (merge operations) include explicit inputs.
         """
         stage_dict: dict[str, Any] = {"type": self.stage_type}
 
         if self.filename:
             stage_dict["filename"] = self.filename
 
-        if self.tag:
+        # Only include user-defined tags, not auto-generated ones
+        if self.tag and not self.tag.startswith("stage_"):
             stage_dict["tag"] = self.tag
 
-        if self.inputs:
-            # Convert Stage objects to tags
+        if self.inputs and len(self.inputs) > 1:
             input_tags = []
             for inp in self.inputs:
                 if isinstance(inp, Stage):
-                    if inp.tag:
+                    if inp.tag and not inp.tag.startswith("stage_"):
                         input_tags.append(inp.tag)
                     else:
                         raise StageError(
-                            f"Input stage {inp.stage_type} must have a tag when used as input"
+                            f"Input stage {inp.stage_type} must have a user-defined tag when used in merge operations"
                         )
                 else:
                     input_tags.append(inp)
