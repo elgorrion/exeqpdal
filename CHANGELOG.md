@@ -7,6 +7,13 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and
 
 ## [Unreleased]
 
+## [0.1.0a4] - 2025-11-17
+
+### Changed
+- Simplified pipeline JSON generation to omit auto-generated tags and single inputs
+- Leverages PDAL's implicit sequential chaining for cleaner pipeline JSON output
+- Only includes explicit inputs for multi-input stages (merge operations)
+
 ## [0.1.0a3] - 2025-10-21
 
 ### Fixed
