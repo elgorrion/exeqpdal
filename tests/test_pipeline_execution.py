@@ -117,7 +117,6 @@ class TestPipelineValidation:
 
         is_valid = pipeline.validate()
         assert is_valid is True
-        assert pipeline._is_valid is True
 
     def test_validate_sets_streamable_flag(self, small_laz: Path, tmp_path: Path) -> None:
         """Test validation sets is_streamable flag."""

@@ -7,7 +7,7 @@ import logging
 from typing import TYPE_CHECKING, Any, cast
 
 from exeqpdal.core.executor import executor
-from exeqpdal.exceptions import PDALExecutionError
+from exeqpdal.exceptions import MetadataError, PDALExecutionError
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -92,9 +92,15 @@ def get_bounds(filename: str | Path) -> dict[str, float]:
 
     Returns:
         Dictionary with bounds (minx, miny, minz, maxx, maxy, maxz)
+
+    Raises:
+        MetadataError: If the PDAL info output contains no bounds
     """
-    result = info(filename, boundary=True)
-    return cast("dict[str, float]", result.get("boundary", {}))
+    result = info(filename, summary=True)
+    bounds = result.get("summary", {}).get("bounds")
+    if not isinstance(bounds, dict):
+        raise MetadataError(f"No bounds in PDAL info output for {filename}")
+    return cast("dict[str, float]", bounds)
 
 
 def get_count(filename: str | Path) -> int:
@@ -105,10 +111,15 @@ def get_count(filename: str | Path) -> int:
 
     Returns:
         Number of points in file
+
+    Raises:
+        MetadataError: If the PDAL info output contains no point count
     """
     result = info(filename, summary=True)
-    summary = result.get("summary", {})
-    return cast("int", summary.get("num_points", 0))
+    count = result.get("summary", {}).get("num_points")
+    if not isinstance(count, int):
+        raise MetadataError(f"No point count in PDAL info output for {filename}")
+    return count
 
 
 def get_dimensions(filename: str | Path) -> list[str]:

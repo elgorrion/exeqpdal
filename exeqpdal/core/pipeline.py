@@ -7,7 +7,7 @@ import logging
 from typing import Any
 
 from exeqpdal.core.executor import executor
-from exeqpdal.exceptions import PDALExecutionError, PipelineError, ValidationError
+from exeqpdal.exceptions import PDALError, PipelineError, ValidationError
 from exeqpdal.stages.base import Stage
 
 logger = logging.getLogger(__name__)
@@ -37,7 +37,6 @@ class Pipeline:
         self._point_count: int = 0
         self._metadata: dict[str, Any] = {}
         self._log: str = ""
-        self._is_valid: bool | None = None
         self._is_streamable: bool | None = None
 
         # Parse pipeline input
@@ -162,7 +161,7 @@ class Pipeline:
             logger.info(f"Pipeline executed successfully: {self._point_count} points")
             return self._point_count
 
-        except PDALExecutionError as e:
+        except PDALError as e:
             raise PipelineError(f"Pipeline execution failed: {e}") from e
 
     def _parse_metadata_count(self, metadata: dict[str, Any]) -> None:
@@ -172,8 +171,8 @@ class Pipeline:
             metadata: PDAL metadata dictionary
         """
         # Metadata structure: {"stages": {"reader.type": {"count": N}, ...}}
-        if "stages" in metadata:
-            stages = metadata["stages"]
+        stages = metadata.get("stages")
+        if isinstance(stages, dict):
             # Look for count in any stage (typically reader or last filter)
             for stage_name, stage_data in stages.items():
                 if isinstance(stage_data, dict) and "count" in stage_data:
@@ -215,10 +214,9 @@ class Pipeline:
         """
         try:
             is_valid, is_streamable, message = executor.validate_pipeline(self._pipeline_json)
-        except PDALExecutionError as e:
+        except PDALError as e:
             raise ValidationError(f"Pipeline validation failed: {e}") from e
 
-        self._is_valid = is_valid
         self._is_streamable = is_streamable
 
         if not is_valid:

@@ -7,8 +7,8 @@ import sys
 
 
 def check_python_version() -> bool:
-    """Check if Python version is 3.12+."""
-    # Version check matches pyproject.toml requires-python = ">=3.12"
+    """Check if Python version is 3.10+."""
+    # Version check matches pyproject.toml requires-python = ">=3.10"
     print(
         f"✓ Python version: {sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
     )

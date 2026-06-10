@@ -7,6 +7,41 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and
 
 ## [Unreleased]
 
+### Removed
+- **Breaking:** `Pipeline.arrays` and the numpy dependency. exeqpdal drives the PDAL
+  CLI and never materializes point data in memory; use the official
+  [PDAL Python bindings](https://github.com/PDAL/python) for numpy array access.
+  The package now has no runtime dependencies.
+
+### Changed
+- Pipeline JSON is passed to `pdal pipeline --stdin` via standard input instead of a
+  temporary file; all subprocess I/O is UTF-8 with replacement decoding, so non-UTF-8
+  bytes in PDAL output can no longer crash a run.
+- Python floor lowered from 3.12 to 3.10.
+- `Pipeline.validate()` and `Pipeline.is_streamable` now report PDAL's actual verdict:
+  the `--validate` JSON output is parsed instead of relying on the exit code (always 0)
+  and a substring match (always true). Invalid pipelines now raise `ValidationError`
+  with PDAL's error detail.
+- `get_count()` reads `num_points` from `pdal info --summary` and raises
+  `MetadataError` when absent (it previously always returned 0).
+- `get_bounds()` reads the bounding box from `pdal info --summary` (the previous
+  `--boundary` source never contained min/max keys).
+- `Executor.get_driver_info()` uses `pdal --options <driver> --showjson` and returns
+  a parsed `{driver, options}` structure (the previous invocation could never succeed).
+- `set_verbose()` now affects already-created executors, including the module-level one.
+
+### Added
+- `set_timeout()`: configurable timeout for every PDAL subprocess call (including the
+  version probe); expiry raises `PDALExecutionError` carrying any partial output.
+- One-time warning when the detected PDAL version is below the supported floor (2.8).
+- PDAL version string is cached; `set_pdal_path()` resets the cache.
+
+### Fixed
+- `Pipeline.execute()`/`validate()` again raise only their documented exception types
+  (`PipelineError`/`ValidationError`) when PDAL is missing or broken.
+- A failed PDAL launch (missing, non-executable, or wrong-architecture binary) raises
+  `PDALNotFoundError` instead of a raw `OSError`.
+
 ## [0.1.0a5] - 2025-11-17
 
 ### Fixed

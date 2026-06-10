@@ -21,8 +21,9 @@ debug issues, and ship a professional-quality package without relying on stale a
 
 ### 2.1 Requirements
 
-- **Python**: 3.12 (tested under `pyproject.toml`)
-- **PDAL CLI**: 2.5+ recommended. Integration tests use stages such as `filters.smrf`,
+- **Python**: 3.10+ (per `pyproject.toml` `requires-python`)
+- **PDAL CLI**: 2.8+ supported (a one-time warning is logged below that floor); tested
+  against 2.10. Integration tests use stages such as `filters.smrf`,
   `filters.python`, COPC readers/writers, and GDAL raster outputs.
 - **Operating systems**: Linux, macOS, Windows (QGIS bundle support implemented for Windows).
 - **Optional**: QGIS 3.40–3.44 on Windows for automatic PDAL discovery.

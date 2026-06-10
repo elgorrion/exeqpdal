@@ -36,21 +36,20 @@ class TestInfoAppRealExecution:
 
     @pytest.mark.usefixtures("skip_if_no_pdal")
     def test_info_point_count(self, small_laz: Path) -> None:
-        """Test get_count helper function returns int (may be 0 if not in output)."""
+        """Test get_count helper function returns the real point count."""
         count = get_count(small_laz)
 
         assert isinstance(count, int)
-        assert count >= 0
+        assert count > 0
 
     @pytest.mark.usefixtures("skip_if_no_pdal")
     def test_info_bounds(self, small_laz: Path) -> None:
-        """Test get_bounds helper function returns dict (structure varies by PDAL)."""
+        """Test get_bounds helper function returns the minx..maxz bounding box."""
         bounds = get_bounds(small_laz)
 
         assert isinstance(bounds, dict)
-        if "minx" in bounds:
-            assert "maxx" in bounds
-            assert bounds["minx"] < bounds["maxx"]
+        assert {"minx", "miny", "minz", "maxx", "maxy", "maxz"} <= set(bounds)
+        assert bounds["minx"] < bounds["maxx"]
 
     @pytest.mark.usefixtures("skip_if_no_pdal")
     def test_info_dimensions(self, small_laz: Path) -> None:
@@ -197,10 +196,11 @@ class TestInfoAppRealExecution:
         assert isinstance(result3, dict)
 
     @pytest.mark.usefixtures("skip_if_no_pdal")
-    def test_get_count_with_no_count_field(self, small_laz: Path) -> None:
-        """Test get_count returns 0 when count field missing."""
+    def test_get_count_matches_summary(self, small_laz: Path) -> None:
+        """Test get_count matches the num_points reported by info --summary."""
         count = get_count(small_laz)
-        assert isinstance(count, int)
+        summary = info(small_laz, summary=True)["summary"]
+        assert count == summary["num_points"]
 
     @pytest.mark.usefixtures("skip_if_no_pdal")
     def test_get_dimensions_returns_list(self, small_laz: Path) -> None:
