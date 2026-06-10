@@ -142,6 +142,7 @@ logs/
 .remote-workflow/
 docs/claude/
 docs/gemini/
+specs/
 
 # LAZ-to-writers Test Outputs
 tests/laz_to_writers/outputs/*
