@@ -35,12 +35,21 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and
   version probe); expiry raises `PDALExecutionError` carrying any partial output.
 - One-time warning when the detected PDAL version is below the supported floor (2.8).
 - PDAL version string is cached; `set_pdal_path()` resets the cache.
+- Stage factories for the remaining PDAL 2.10 stages: `Reader.spz`, `Writer.spz`,
+  `Filter.m3c2`, `Filter.supervoxel`, `Filter.shell` — every stage documented for
+  PDAL 2.10.1 now has a factory.
+- `sort()`: wrapper for the `pdal sort` application (Morton-order spatial sort).
+- `scripts/check_stage_drift.py` plus a pinned stage list: verifies factory coverage
+  against a real `pdal --drivers` and the documented PDAL 2.10.1 stage set.
 
 ### Fixed
 - `Pipeline.execute()`/`validate()` again raise only their documented exception types
   (`PipelineError`/`ValidationError`) when PDAL is missing or broken.
 - A failed PDAL launch (missing, non-executable, or wrong-architecture binary) raises
   `PDALNotFoundError` instead of a raw `OSError`.
+- `Filter.griddecimation` emits the stage name PDAL actually registers
+  (`filters.gridDecimation`); the previous all-lowercase name was rejected by the
+  binary.
 
 ## [0.1.0a5] - 2025-11-17
 

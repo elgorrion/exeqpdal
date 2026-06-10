@@ -17,6 +17,11 @@ class TestWriterFactory:
         writer = pdal.Writer.copc("output.copc.laz")
         assert writer.stage_type == "writers.copc"
 
+    def test_writer_spz(self) -> None:
+        writer = pdal.Writer.spz("output.spz")
+        assert writer.stage_type == "writers.spz"
+        assert writer.filename == "output.spz"
+
     def test_writer_with_compression(self) -> None:
         writer = pdal.Writer.las("output.laz", compression="laszip")
         assert writer.options["compression"] == "laszip"

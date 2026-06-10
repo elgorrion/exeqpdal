@@ -10,7 +10,7 @@ from exeqpdal.apps.info import (
     get_stats,
     info,
 )
-from exeqpdal.apps.pipeline_apps import merge, pipeline, split, tile, tindex
+from exeqpdal.apps.pipeline_apps import merge, pipeline, sort, split, tile, tindex
 from exeqpdal.apps.translate import convert, translate
 
 __all__ = [
@@ -23,6 +23,7 @@ __all__ = [
     "info",
     "merge",
     "pipeline",
+    "sort",
     "split",
     "tile",
     "tindex",

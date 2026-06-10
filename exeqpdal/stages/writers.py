@@ -111,6 +111,11 @@ class Writer:
         return WriterStage("writers.sbet", filename=filename, **options)
 
     @staticmethod
+    def spz(filename: str, **options: Any) -> WriterStage:
+        """Write SPZ (compressed Gaussian splat) files."""
+        return WriterStage("writers.spz", filename=filename, **options)
+
+    @staticmethod
     def text(filename: str, **options: Any) -> WriterStage:
         """Write ASCII text files."""
         return WriterStage("writers.text", filename=filename, **options)

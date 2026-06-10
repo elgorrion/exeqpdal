@@ -33,3 +33,22 @@ class TestFilterFactory:
         filter_stage = pdal.Filter.streamcallback(where="Classification[2:2]")
         assert filter_stage.stage_type == "filters.streamcallback"
         assert filter_stage.options["where"] == "Classification[2:2]"
+
+    def test_filter_m3c2(self) -> None:
+        filter_stage = pdal.Filter.m3c2(searchradius=2.0)
+        assert filter_stage.stage_type == "filters.m3c2"
+        assert filter_stage.options["searchradius"] == 2.0
+
+    def test_filter_supervoxel(self) -> None:
+        filter_stage = pdal.Filter.supervoxel()
+        assert filter_stage.stage_type == "filters.supervoxel"
+
+    def test_filter_shell(self) -> None:
+        filter_stage = pdal.Filter.shell(command="echo done")
+        assert filter_stage.stage_type == "filters.shell"
+        assert filter_stage.options["command"] == "echo done"
+
+    def test_filter_griddecimation_camelcase_stage_type(self) -> None:
+        """PDAL 2.10 only accepts the camelCase registered name."""
+        filter_stage = pdal.Filter.griddecimation(resolution=1.0)
+        assert filter_stage.stage_type == "filters.gridDecimation"

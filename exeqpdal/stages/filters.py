@@ -105,6 +105,11 @@ class Filter:
         """Lloyd's k-means clustering filter."""
         return FilterStage("filters.lloydkmeans", **options)
 
+    @staticmethod
+    def supervoxel(**options: Any) -> FilterStage:
+        """Supervoxel segmentation filter."""
+        return FilterStage("filters.supervoxel", **options)
+
     # Feature extraction filters
     @staticmethod
     def approximatecoplanar(**options: Any) -> FilterStage:
@@ -185,7 +190,9 @@ class Filter:
     @staticmethod
     def griddecimation(**options: Any) -> FilterStage:
         """Grid-based decimation filter."""
-        return FilterStage("filters.griddecimation", **options)
+        # PDAL 2.10 registers this stage with a camelCase name; the all-lowercase
+        # form is rejected by the binary.
+        return FilterStage("filters.gridDecimation", **options)
 
     # Attribute manipulation filters
     @staticmethod
@@ -424,6 +431,11 @@ class Filter:
         """Expression-based statistics filter."""
         return FilterStage("filters.expressionstats", **options)
 
+    @staticmethod
+    def m3c2(**options: Any) -> FilterStage:
+        """M3C2 distance computation between two point clouds."""
+        return FilterStage("filters.m3c2", **options)
+
     # Mesh generation filters
     @staticmethod
     def delaunay(**options: Any) -> FilterStage:
@@ -460,6 +472,11 @@ class Filter:
     def julia(**options: Any) -> FilterStage:
         """Julia script filter."""
         return FilterStage("filters.julia", **options)
+
+    @staticmethod
+    def shell(**options: Any) -> FilterStage:
+        """Execute a shell command inline with pipeline steps."""
+        return FilterStage("filters.shell", **options)
 
     # Streaming filters
     @staticmethod
