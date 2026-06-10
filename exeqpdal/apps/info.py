@@ -106,8 +106,9 @@ def get_count(filename: str | Path) -> int:
     Returns:
         Number of points in file
     """
-    result = info(filename)
-    return cast("int", result.get("count", 0))
+    result = info(filename, summary=True)
+    summary = result.get("summary", {})
+    return cast("int", summary.get("num_points", 0))
 
 
 def get_dimensions(filename: str | Path) -> list[str]:

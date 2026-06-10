@@ -6,7 +6,7 @@ authors = [
     {name = "ElGorrion", email = "elgorrion.eu@gmail.com"}
 ]
 readme = {file = "README.md", content-type = "text/markdown"}
-requires-python = ">=3.12"
+requires-python = ">=3.10"
 license = {text = "MIT"}
 keywords = ["pdal", "lidar", "pointcloud", "qgis", "geospatial"]
 classifiers = [
@@ -17,15 +17,16 @@ classifiers = [
     "Natural Language :: English",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Scientific/Engineering :: GIS",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Typing :: Typed",
 ]
 
-dependencies = [
-    "numpy>=1.26.4",
-]
+dependencies = []
 
 [project.optional-dependencies]
 dev = [
@@ -53,7 +54,7 @@ build-backend = "hatchling.build"
 packages = ["exeqpdal"]
 
 [tool.ruff]
-target-version = "py312"
+target-version = "py310"
 line-length = 100
 exclude = [
     ".git",
@@ -95,7 +96,7 @@ ignore = [
 known-first-party = ["exeqpdal"]
 
 [tool.mypy]
-python_version = "3.12"
+python_version = "3.10"
 strict = true
 warn_return_any = true
 warn_unused_configs = true

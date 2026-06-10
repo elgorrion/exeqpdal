@@ -24,7 +24,7 @@ coverage.
 
 ## Prerequisites
 
--   Python 3.12+
+-   Python 3.10+
 -   PDAL CLI installed and accessible (system PATH, `PDAL_EXECUTABLE`, or detected in QGIS on
     Windows)
 
@@ -128,8 +128,8 @@ pdal.set_verbose(True)
 
 ## Project Status & Limitations
 
--   `Pipeline.arrays` is not yet implemented – it currently returns an empty list even after
-    execution.
+-   In-memory point arrays are out of scope – exeqpdal drives the PDAL CLI. If you need
+    numpy arrays of point data, use the official [PDAL Python bindings](https://github.com/PDAL/python).
 -   Integration tests use six LAZ/COPC test datasets in `tests/test_data_laz/` covering various
     scenarios (filtered/non-filtered data, small/mid/large sizes, LAS/COPC formats). Tests
     automatically skip when PDAL or test data are unavailable. See `tests/test_data_laz/DATASET.md`

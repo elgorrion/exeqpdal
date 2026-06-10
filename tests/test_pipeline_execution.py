@@ -69,21 +69,6 @@ class TestPipelineRealExecution:
         point_count = pipeline.execute()
         assert point_count >= 0
 
-    def test_pipeline_arrays_not_loaded(self, small_laz: Path, tmp_path: Path) -> None:
-        """Test that arrays are not loaded by default."""
-        if not small_laz.exists():
-            pytest.skip(f"LAZ file not found: {small_laz}")
-
-        output = tmp_path / "output.las"
-
-        pipeline = Pipeline(pdal.Reader.las(str(small_laz)) | pdal.Writer.las(str(output)))
-
-        pipeline.execute()
-
-        arrays = pipeline.arrays
-        assert isinstance(arrays, list)
-        assert len(arrays) == 0
-
     def test_pipeline_streaming_enabled(self, small_laz: Path, tmp_path: Path) -> None:
         """Test pipeline execution with streaming mode enabled."""
         if not small_laz.exists():

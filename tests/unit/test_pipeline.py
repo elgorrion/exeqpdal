@@ -105,11 +105,6 @@ class TestPipelineParsing:
         with pytest.raises(PipelineError):
             _ = pipeline.log
 
-    def test_arrays_property_pre_execution_raises(self) -> None:
-        pipeline = pdal.Pipeline({"pipeline": [{"type": "readers.las", "filename": "input.las"}]})
-        with pytest.raises(PipelineError):
-            _ = pipeline.arrays
-
     def test_pipeline_repr_reflects_execution_state(self) -> None:
         pipeline = pdal.Pipeline({"pipeline": [{"type": "readers.las", "filename": "input.las"}]})
         assert "not executed" in repr(pipeline)

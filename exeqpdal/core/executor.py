@@ -50,57 +50,62 @@ class Executor:
         Raises:
             PDALExecutionError: If pipeline execution fails
         """
+        config.check_pdal_version()
+
         # Convert dict to JSON string if needed
         if isinstance(pipeline_json, dict):
             pipeline_json = json.dumps(pipeline_json, indent=2)
 
-        # Write pipeline to temporary file
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False, encoding="utf-8"
-        ) as f:
-            f.write(pipeline_json)
-            pipeline_file = Path(f.name)
+        # Build command - pipeline JSON is passed via stdin
+        cmd = [str(config.pdal_path), "pipeline", "--stdin"]
+
+        # Add stream mode flags
+        if stream_mode is True:
+            cmd.append("--stream")
+        elif stream_mode is False:
+            cmd.append("--nostream")
+
+        # Add metadata output
+        metadata_file: Path | None = None
+        if metadata:
+            with tempfile.NamedTemporaryFile(suffix=".metadata.json", delete=False) as f:
+                metadata_file = Path(f.name)
+            cmd.extend(["--metadata", str(metadata_file)])
+
+        # Add verbose flag
+        if self.verbose:
+            cmd.append("--verbose")
+            cmd.append("8")
+
+        logger.debug(f"Executing PDAL command: {' '.join(cmd)}")
+        logger.debug(f"Pipeline JSON:\n{pipeline_json}")
 
         try:
-            # Build command
-            cmd = [str(config.pdal_path), "pipeline", str(pipeline_file)]
-
-            # Add stream mode flags
-            if stream_mode is True:
-                cmd.append("--stream")
-            elif stream_mode is False:
-                cmd.append("--nostream")
-
-            # Add metadata output
-            metadata_file: Path | None = None
-            if metadata:
-                metadata_file = pipeline_file.with_suffix(".metadata.json")
-                cmd.extend(["--metadata", str(metadata_file)])
-
-            # Add verbose flag
-            if self.verbose:
-                cmd.append("--verbose")
-                cmd.append("8")
-
-            logger.debug(f"Executing PDAL command: {' '.join(cmd)}")
-
             # Execute command
-            result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                check=False,
-                creationflags=_SUBPROCESS_FLAGS,
-            )
+            try:
+                result = subprocess.run(
+                    cmd,
+                    input=pipeline_json,
+                    capture_output=True,
+                    encoding="utf-8",
+                    check=False,
+                    creationflags=_SUBPROCESS_FLAGS,
+                    timeout=config.timeout,
+                )
+            except subprocess.TimeoutExpired as e:
+                raise PDALExecutionError(
+                    f"PDAL pipeline execution timed out after {e.timeout} seconds",
+                    command=cmd,
+                ) from e
 
             # Read metadata if generated
             metadata_dict: dict[str, Any] | None = None
-            if metadata_file and metadata_file.exists():
+            if metadata_file and metadata_file.exists() and metadata_file.stat().st_size > 0:
                 try:
                     with metadata_file.open(encoding="utf-8") as f:
                         metadata_dict = json.load(f)
                         logger.debug(f"Metadata loaded: {len(str(metadata_dict))} bytes")
-                except Exception as e:
+                except (OSError, ValueError) as e:
                     logger.warning(f"Failed to read metadata: {e}")
 
             # Check for errors
@@ -119,11 +124,9 @@ class Executor:
         finally:
             # Cleanup temporary files
             try:
-                if pipeline_file.exists():
-                    pipeline_file.unlink()
                 if metadata_file and metadata_file.exists():
                     metadata_file.unlink()
-            except Exception as e:
+            except OSError as e:
                 logger.warning(f"Failed to cleanup temporary files: {e}")
 
     def execute_application(
@@ -145,6 +148,8 @@ class Executor:
         Raises:
             PDALExecutionError: If application execution fails
         """
+        config.check_pdal_version()
+
         # Build command
         cmd = [str(config.pdal_path), app_name]
 
@@ -163,13 +168,20 @@ class Executor:
         logger.debug(f"Executing PDAL command: {' '.join(cmd)}")
 
         # Execute command
-        result = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            check=False,
-            creationflags=_SUBPROCESS_FLAGS,
-        )
+        try:
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                encoding="utf-8",
+                check=False,
+                creationflags=_SUBPROCESS_FLAGS,
+                timeout=config.timeout,
+            )
+        except subprocess.TimeoutExpired as e:
+            raise PDALExecutionError(
+                f"PDAL {app_name} execution timed out after {e.timeout} seconds",
+                command=cmd,
+            ) from e
 
         # Check for errors
         if result.returncode != 0:
@@ -200,48 +212,36 @@ class Executor:
         if isinstance(pipeline_json, dict):
             pipeline_json = json.dumps(pipeline_json, indent=2)
 
-        # Write pipeline to temporary file
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False, encoding="utf-8"
-        ) as f:
-            f.write(pipeline_json)
-            pipeline_file = Path(f.name)
+        # Build validation command - pipeline JSON is passed via stdin
+        cmd = [str(config.pdal_path), "pipeline", "--stdin", "--validate"]
 
+        logger.debug(f"Validating pipeline: {' '.join(cmd)}")
+        logger.debug(f"Pipeline JSON:\n{pipeline_json}")
+
+        # Execute validation
         try:
-            # Build validation command
-            cmd = [
-                str(config.pdal_path),
-                "pipeline",
-                str(pipeline_file),
-                "--validate",
-            ]
-
-            logger.debug(f"Validating pipeline: {' '.join(cmd)}")
-
-            # Execute validation
             result = subprocess.run(
                 cmd,
+                input=pipeline_json,
                 capture_output=True,
-                text=True,
+                encoding="utf-8",
                 check=False,
                 creationflags=_SUBPROCESS_FLAGS,
+                timeout=config.timeout,
             )
+        except subprocess.TimeoutExpired as e:
+            raise PDALExecutionError(
+                f"PDAL pipeline validation timed out after {e.timeout} seconds",
+                command=cmd,
+            ) from e
 
-            is_valid = result.returncode == 0
-            is_streamable = "streamable" in result.stdout.lower()
+        is_valid = result.returncode == 0
+        is_streamable = "streamable" in result.stdout.lower()
 
-            message = result.stdout if is_valid else result.stderr
+        message = result.stdout if is_valid else result.stderr
 
-            logger.info(f"Pipeline validation: valid={is_valid}, streamable={is_streamable}")
-            return is_valid, is_streamable, message
-
-        finally:
-            # Cleanup
-            try:
-                if pipeline_file.exists():
-                    pipeline_file.unlink()
-            except Exception as e:
-                logger.warning(f"Failed to cleanup validation file: {e}")
+        logger.info(f"Pipeline validation: valid={is_valid}, streamable={is_streamable}")
+        return is_valid, is_streamable, message
 
     def get_driver_info(self, driver_name: str) -> dict[str, Any]:
         """Get information about a PDAL driver.
@@ -259,13 +259,20 @@ class Executor:
 
         logger.debug(f"Getting driver info: {' '.join(cmd)}")
 
-        result = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            check=False,
-            creationflags=_SUBPROCESS_FLAGS,
-        )
+        try:
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                encoding="utf-8",
+                check=False,
+                creationflags=_SUBPROCESS_FLAGS,
+                timeout=config.timeout,
+            )
+        except subprocess.TimeoutExpired as e:
+            raise PDALExecutionError(
+                f"Failed to get driver info for {driver_name}: timed out after {e.timeout} seconds",
+                command=cmd,
+            ) from e
 
         if result.returncode != 0:
             raise PDALExecutionError(
