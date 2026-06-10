@@ -171,6 +171,11 @@ class Reader:
         return ReaderStage("readers.smrmsg", filename=filename, **options)
 
     @staticmethod
+    def spz(filename: str, **options: Any) -> ReaderStage:
+        """Read SPZ (compressed Gaussian splat) files."""
+        return ReaderStage("readers.spz", filename=filename, **options)
+
+    @staticmethod
     def stac(filename: str, **options: Any) -> ReaderStage:
         """Read STAC (SpatioTemporal Asset Catalog) items."""
         return ReaderStage("readers.stac", filename=filename, **options)

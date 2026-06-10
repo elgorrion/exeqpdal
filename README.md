@@ -15,10 +15,11 @@ coverage.
     executable via `subprocess.run`.
 -   **Strict typing** – the package ships `py.typed`, is developed under `mypy --strict`,
     and exposes typed factory helpers.
--   **Convenience apps** – wrappers for PDAL tools such as `info`, `translate`, `merge`, `split`,
-    `tile`, and `tindex`.
--   **Broad stage coverage** – factories currently expose ~40 readers, 80+ filters, and 25 writers.
-    Coverage is expanding; unsupported drivers can still be addressed through custom JSON.
+-   **Convenience apps** – wrappers for PDAL tools such as `info`, `translate`, `merge`, `sort`,
+    `split`, `tile`, and `tindex`.
+-   **Full stage coverage** – factories expose all 151 stages documented for PDAL 2.10.1
+    (38 readers, 90 filters, 23 writers); unsupported or newer drivers can still be addressed
+    through custom JSON.
 -   **QGIS-friendly** – automatic PDAL discovery checks PATH, `PDAL_EXECUTABLE`, and
     common QGIS 3.4x Windows installs.
 

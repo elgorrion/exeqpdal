@@ -21,6 +21,11 @@ class TestReaderFactory:
         reader = pdal.Reader.text("input.txt")
         assert reader.stage_type == "readers.text"
 
+    def test_reader_spz(self) -> None:
+        reader = pdal.Reader.spz("input.spz")
+        assert reader.stage_type == "readers.spz"
+        assert reader.filename == "input.spz"
+
     def test_reader_with_options(self) -> None:
         reader = pdal.Reader.las("input.las", spatialreference="EPSG:4326")
         assert reader.options["spatialreference"] == "EPSG:4326"

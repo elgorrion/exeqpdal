@@ -1,4 +1,4 @@
-"""PDAL applications - merge, split, tile, tindex."""
+"""PDAL applications - merge, sort, split, tile, tindex."""
 
 from __future__ import annotations
 
@@ -31,6 +31,37 @@ def merge(
     logger.info(f"Merging {len(input_files)} files to {output_file}")
     executor.execute_application("merge", args)
     logger.info("Merge completed")
+
+
+def sort(
+    input_file: str | Path,
+    output_file: str | Path,
+    *,
+    compress: bool = False,
+    metadata: bool = False,
+) -> None:
+    """Sort a point cloud file into Morton (spatial) order.
+
+    Args:
+        input_file: Input file path
+        output_file: Output file path
+        compress: Compress output data (if supported by output format)
+        metadata: Forward metadata (VLRs, header entries) from previous stages
+
+    Raises:
+        PDALExecutionError: If sort fails
+    """
+    args = [str(input_file), str(output_file)]
+
+    if compress:
+        args.append("--compress")
+
+    if metadata:
+        args.append("--metadata")
+
+    logger.info(f"Sorting {input_file} to {output_file}")
+    executor.execute_application("sort", args)
+    logger.info("Sort completed")
 
 
 def split(
