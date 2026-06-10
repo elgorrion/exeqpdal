@@ -226,8 +226,17 @@ class TestExecutorRealExecution:
 
     @pytest.mark.usefixtures("skip_if_no_pdal")
     def test_pipeline_validation_error(self) -> None:
-        """Test validation handles JSON conversion correctly."""
-        pipeline_dict: dict[str, list[dict[str, str]]] = {"pipeline": []}
+        """Test validation handles JSON conversion correctly.
+
+        Uses a faux-reader pipeline: an empty pipeline list crashes
+        `pdal pipeline --validate` outright on PDAL 2.10.
+        """
+        pipeline_dict = {
+            "pipeline": [
+                {"type": "readers.faux", "count": 10, "bounds": "([0,1],[0,1],[0,1])"},
+                {"type": "writers.null"},
+            ]
+        }
 
         is_valid, is_streamable, message = executor.validate_pipeline(pipeline_dict)
 

@@ -77,10 +77,11 @@ class TestCOPCReading:
         assert count > 0
         assert output.exists()
 
-        # Verify we got fewer points than full resolution
-        full_info = pdal.info(str(mid_copc))
-        full_count = full_info.get("count", 0)
-        assert count < full_count, "Resolution filter should reduce point count"
+        # Verify we got fewer points than full resolution (execute() reports
+        # the reader's header count, so measure the written file instead)
+        written_count = pdal.get_count(str(output))
+        full_count = pdal.get_count(str(mid_copc))
+        assert written_count < full_count, "Resolution filter should reduce point count"
 
     @pytest.mark.integration
     def test_copc_streaming_read(self, small_copc: Path, tmp_path: Path) -> None:
@@ -98,8 +99,9 @@ class TestCOPCReading:
 
         count = pipeline.execute()
         assert count > 0
-        assert count <= 10000
         assert output.exists()
+        written_count = pdal.get_count(str(output))
+        assert 0 < written_count <= 10000
 
 
 class TestCOPCWriting:
@@ -116,9 +118,9 @@ class TestCOPCWriting:
         assert count > 0
         assert output.exists()
 
-        # Verify COPC structure
-        info = pdal.info(str(output))
-        assert info.get("copc", False), "Output should be COPC format"
+        # Verify COPC structure (flag lives in the metadata document)
+        info = pdal.info(str(output), metadata=True)
+        assert info.get("metadata", {}).get("copc", False), "Output should be COPC format"
 
     @pytest.mark.integration
     def test_copc_with_filtering(self, small_laz: Path, tmp_path: Path) -> None:
@@ -136,8 +138,8 @@ class TestCOPCWriting:
         assert count >= 0  # May be 0 if no ground points in bounds
         if count > 0:
             assert output.exists()
-            info = pdal.info(str(output))
-            assert info.get("copc", False)
+            info = pdal.info(str(output), metadata=True)
+            assert info.get("metadata", {}).get("copc", False)
 
     @pytest.mark.integration
     def test_copc_forward_option(self, small_laz: Path, tmp_path: Path) -> None:
@@ -183,11 +185,12 @@ class TestCOPCRoundTrip:
 
         pipeline = Pipeline(pdal.Reader.copc(str(small_copc)) | pdal.Writer.copc(str(output)))
 
-        original_count = pdal.info(str(small_copc)).get("count", 0)
+        original_count = pdal.get_count(str(small_copc))
         reindexed_count = pipeline.execute()
 
         assert reindexed_count == original_count
         assert output.exists()
+        assert pdal.get_count(str(output)) == original_count
 
 
 class TestCOPCMetadata:
@@ -248,9 +251,10 @@ class TestCOPCSpatialQueries:
         assert count > 0
         assert output.exists()
 
-        # Verify count is much smaller than full dataset
-        full_count = pdal.info(str(mid_copc)).get("count", 0)
-        assert count < full_count * 0.1, "Spatial query should return subset of points"
+        # Verify the written file is much smaller than the full dataset
+        written_count = pdal.get_count(str(output))
+        full_count = pdal.get_count(str(mid_copc))
+        assert written_count < full_count * 0.1, "Spatial query should return subset of points"
 
     @pytest.mark.integration
     def test_copc_multiple_bounded_reads(self, small_copc: Path, tmp_path: Path) -> None:
@@ -285,13 +289,8 @@ class TestCOPCComparison:
     @pytest.mark.integration
     def test_copc_vs_las_content_equivalence(self, mid_copc: Path, small_laz: Path) -> None:
         """Test that COPC and LAS contain equivalent point data."""
-        # Get statistics from both
-        copc_info = pdal.info(str(mid_copc), stats=True)
-        las_info = pdal.info(str(small_laz), stats=True)
-
-        # Both should have point counts
-        copc_count = copc_info.get("count", 0)
-        las_count = las_info.get("count", 0)
+        copc_count = pdal.get_count(str(mid_copc))
+        las_count = pdal.get_count(str(small_laz))
 
         assert copc_count > 0
         assert las_count > 0

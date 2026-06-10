@@ -42,12 +42,11 @@ class TestMergeOperations:
         pdal.merge([str(file1), str(file2)], str(merged_output))
 
         assert merged_output.exists()
-        merged_info = pdal.info(str(merged_output))
-        merged_count = merged_info.get("count", 0)
+        merged_count = pdal.get_count(str(merged_output))
 
         # Get individual counts
-        count1 = pdal.info(str(file1)).get("count", 0)
-        count2 = pdal.info(str(file2)).get("count", 0)
+        count1 = pdal.get_count(str(file1))
+        count2 = pdal.get_count(str(file2))
 
         # Merged count should be sum of both (may have duplicates in overlap)
         assert merged_count > 0
@@ -72,12 +71,13 @@ class TestMergeOperations:
             | pdal.Writer.las(str(filtered))
         )
 
-        filtered_count = pipeline.execute()
-        merged_count = pdal.info(str(merged)).get("count", 0)
+        pipeline.execute()
+        assert filtered.exists()
+        filtered_count = pdal.get_count(str(filtered))
+        merged_count = pdal.get_count(str(merged))
 
         assert filtered_count > 0
         assert filtered_count < merged_count
-        assert filtered.exists()
 
     @pytest.mark.integration
     def test_merge_with_duplicate_detection(self, dual_laz: list[Path], tmp_path: Path) -> None:
@@ -88,8 +88,8 @@ class TestMergeOperations:
         pdal.merge([str(f) for f in dual_laz], str(merged))
 
         assert merged.exists()
-        merged_count = pdal.info(str(merged)).get("count", 0)
-        original_count = pdal.info(str(dual_laz[0])).get("count", 0)
+        merged_count = pdal.get_count(str(merged))
+        original_count = pdal.get_count(str(dual_laz[0]))
 
         # Should be roughly 2x original (both files are same)
         assert merged_count >= original_count * 1.9  # Allow for small differences
@@ -106,7 +106,7 @@ class TestMergeOperations:
         pdal.merge([str(las_file), str(copc_file)], str(merged))
 
         assert merged.exists()
-        assert pdal.info(str(merged)).get("count", 0) > 0
+        assert pdal.get_count(str(merged)) > 0
 
 
 class TestTindexOperations:
@@ -187,9 +187,10 @@ class TestSpatialFiltering:
         assert count > 0
         assert query_result.exists()
 
-        # Result should be much smaller than full file
-        full_count = pdal.info(str(file2)).get("count", 0)
-        assert count < full_count * 0.2
+        # Written result should be much smaller than the full file
+        written_count = pdal.get_count(str(query_result))
+        full_count = pdal.get_count(str(file2))
+        assert written_count < full_count * 0.2
 
     @pytest.mark.integration
     def test_multi_region_extraction(
@@ -213,15 +214,15 @@ class TestSpatialFiltering:
                 | pdal.Filter.crop(bounds=bounds)
                 | pdal.Writer.las(str(output))
             )
-            count = pipeline.execute()
-            if count > 0:
-                assert output.exists()
-                counts.append(count)
+            pipeline.execute()
+            written = pdal.get_count(str(output)) if output.exists() else 0
+            if written > 0:
+                counts.append(written)
 
         # At least some regions should have points
         assert len(counts) > 0
         # Sum of regions should be less than total (boundaries may exclude some points)
-        total_count = pdal.info(str(file1)).get("count", 0)
+        total_count = pdal.get_count(str(file1))
         assert sum(counts) <= total_count
 
 
@@ -320,10 +321,11 @@ class TestSpatialIndexing:
         )
 
         count = pipeline.execute()
-        merged_count = pdal.info(str(merged)).get("count", 0)
+        merged_count = pdal.get_count(str(merged))
 
         assert count == merged_count
         assert sorted_output.exists()
+        assert pdal.get_count(str(sorted_output)) == merged_count
 
 
 class TestBoundsCalculation:

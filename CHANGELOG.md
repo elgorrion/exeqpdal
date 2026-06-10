@@ -29,6 +29,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and
 - `Executor.get_driver_info()` uses `pdal --options <driver> --showjson` and returns
   a parsed `{driver, options}` structure (the previous invocation could never succeed).
 - `set_verbose()` now affects already-created executors, including the module-level one.
+- `Pipeline.execute()` documents its return value as the number of points read:
+  PDAL's pipeline metadata reports counts only for reader stages, so downstream
+  filters and writers do not change it. Use `get_count()` on the output file for
+  the written count.
 
 ### Added
 - `set_timeout()`: configurable timeout for every PDAL subprocess call (including the

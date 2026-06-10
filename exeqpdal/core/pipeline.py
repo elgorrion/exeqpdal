@@ -133,7 +133,10 @@ class Pipeline:
         """Execute the pipeline.
 
         Returns:
-            Number of points processed
+            Number of points read by the pipeline's reader stage. The PDAL CLI
+            reports point counts only in reader metadata, so filters and
+            writers downstream do not affect this value; measure the output
+            file (e.g. via ``get_count``) when the written count matters.
 
         Raises:
             PipelineError: If pipeline execution fails

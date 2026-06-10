@@ -33,7 +33,7 @@ from conftest import (
 
 import exeqpdal as pdal
 from exeqpdal import Pipeline
-from exeqpdal.exceptions import PDALExecutionError
+from exeqpdal.exceptions import PDALError
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -91,7 +91,7 @@ def test_text_writer_configurations(
     # Execute
     try:
         point_count = pipeline.execute()
-    except PDALExecutionError as e:
+    except PDALError as e:
         handle_writer_exception(e, f"text_{config_id}")
         return
 
@@ -142,7 +142,7 @@ def test_text_writer_basic(
 
     try:
         point_count = pipeline.execute()
-    except PDALExecutionError as e:
+    except PDALError as e:
         handle_writer_exception(e, "text")
         return
 

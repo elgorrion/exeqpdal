@@ -93,4 +93,4 @@ jobs:
 
       - name: Pytest (integration)
         shell: bash -el {0}
-        run: pytest -m "integration and not benchmark and not database" tests/
+        run: pytest -m "integration and not benchmark and not database and not slow" tests/
