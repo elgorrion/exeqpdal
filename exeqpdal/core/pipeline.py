@@ -4,14 +4,11 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from exeqpdal.core.executor import executor
-from exeqpdal.exceptions import PipelineError, ValidationError
+from exeqpdal.exceptions import PDALError, PipelineError, ValidationError
 from exeqpdal.stages.base import Stage
-
-if TYPE_CHECKING:
-    import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -39,9 +36,7 @@ class Pipeline:
         self._executed: bool = False
         self._point_count: int = 0
         self._metadata: dict[str, Any] = {}
-        self._arrays: list[np.ndarray[Any, Any]] = []
         self._log: str = ""
-        self._is_valid: bool | None = None
         self._is_streamable: bool | None = None
 
         # Parse pipeline input
@@ -163,13 +158,10 @@ class Pipeline:
                 # Fallback to parsing stdout (less reliable)
                 self._parse_execution_output(stdout)
 
-            # Try to load arrays if any output was generated
-            self._load_arrays()
-
             logger.info(f"Pipeline executed successfully: {self._point_count} points")
             return self._point_count
 
-        except Exception as e:
+        except PDALError as e:
             raise PipelineError(f"Pipeline execution failed: {e}") from e
 
     def _parse_metadata_count(self, metadata: dict[str, Any]) -> None:
@@ -179,8 +171,8 @@ class Pipeline:
             metadata: PDAL metadata dictionary
         """
         # Metadata structure: {"stages": {"reader.type": {"count": N}, ...}}
-        if "stages" in metadata:
-            stages = metadata["stages"]
+        stages = metadata.get("stages")
+        if isinstance(stages, dict):
             # Look for count in any stage (typically reader or last filter)
             for stage_name, stage_data in stages.items():
                 if isinstance(stage_data, dict) and "count" in stage_data:
@@ -211,19 +203,6 @@ class Pipeline:
                 except (ValueError, IndexError):
                     pass
 
-    def _load_arrays(self) -> None:
-        """Load point data arrays from output files.
-
-        This is a placeholder - actual implementation would need to:
-        1. Identify output files from pipeline
-        2. Read point data using appropriate reader
-        3. Convert to numpy structured arrays
-        """
-        # TODO: Implement array loading
-        # For now, arrays remain empty
-        # In a full implementation, this would parse output files
-        pass
-
     def validate(self) -> bool:
         """Validate pipeline without executing.
 
@@ -235,32 +214,16 @@ class Pipeline:
         """
         try:
             is_valid, is_streamable, message = executor.validate_pipeline(self._pipeline_json)
-
-            self._is_valid = is_valid
-            self._is_streamable = is_streamable
-
-            if not is_valid:
-                raise ValidationError(f"Pipeline validation failed: {message}")
-
-            logger.info(f"Pipeline valid (streamable: {is_streamable})")
-            return True
-
-        except Exception as e:
+        except PDALError as e:
             raise ValidationError(f"Pipeline validation failed: {e}") from e
 
-    @property
-    def arrays(self) -> list[np.ndarray[Any, Any]]:
-        """Get point data arrays.
+        self._is_streamable = is_streamable
 
-        Returns:
-            List of numpy structured arrays with point data
+        if not is_valid:
+            raise ValidationError(f"Pipeline validation failed: {message}")
 
-        Raises:
-            PipelineError: If pipeline hasn't been executed
-        """
-        if not self._executed:
-            raise PipelineError("Pipeline must be executed before accessing arrays")
-        return self._arrays
+        logger.info(f"Pipeline valid (streamable: {is_streamable})")
+        return True
 
     @property
     def metadata(self) -> dict[str, Any]:

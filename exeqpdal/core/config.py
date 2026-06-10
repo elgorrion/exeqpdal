@@ -3,20 +3,20 @@
 from __future__ import annotations
 
 import logging
+import math
 import os
 import platform
+import re
 import shutil
 import subprocess
 from pathlib import Path
 from typing import Final
 
-from exeqpdal.exceptions import ConfigurationError, PDALNotFoundError
+from exeqpdal.exceptions import ConfigurationError, PDALError, PDALNotFoundError
 
 logger = logging.getLogger(__name__)
 
-_SUBPROCESS_FLAGS = (
-    getattr(subprocess, "CREATE_NO_WINDOW", 0) if platform.system() == "Windows" else 0
-)
+MIN_PDAL_VERSION: Final = (2, 8)
 
 
 class Config:
@@ -26,6 +26,9 @@ class Config:
         self._pdal_path: Path | None = None
         self._qgis_root: Path | None = None
         self._verbose: bool = False
+        self._timeout: float | None = None
+        self._pdal_version: str | None = None
+        self._version_checked: bool = False
 
     @property
     def pdal_path(self) -> Path:
@@ -61,7 +64,28 @@ class Config:
             raise ConfigurationError(f"PDAL binary is not executable: {path}")
 
         self._pdal_path = path_obj
+        self._pdal_version = None
+        self._version_checked = False
         logger.info(f"PDAL path set to: {path_obj}")
+
+    @property
+    def timeout(self) -> float | None:
+        """Get subprocess timeout in seconds (None = no timeout)."""
+        return self._timeout
+
+    def set_timeout(self, timeout: float | None) -> None:
+        """Set timeout for PDAL subprocess calls.
+
+        Args:
+            timeout: Timeout in seconds, or None to disable (default)
+
+        Raises:
+            ConfigurationError: If timeout is not positive
+        """
+        if timeout is not None and (timeout <= 0 or not math.isfinite(timeout)):
+            raise ConfigurationError(f"Timeout must be positive and finite, got: {timeout}")
+        self._timeout = timeout
+        logger.info(f"Subprocess timeout: {timeout}")
 
     @property
     def verbose(self) -> bool:
@@ -184,7 +208,7 @@ class Config:
         return None
 
     def get_pdal_version(self) -> str:
-        """Get PDAL version string.
+        """Get PDAL version string (cached after the first successful call).
 
         Returns:
             PDAL version string
@@ -192,21 +216,21 @@ class Config:
         Raises:
             PDALNotFoundError: If PDAL cannot be found or executed
         """
-        try:
-            result = subprocess.run(
+        if self._pdal_version is None:
+            from exeqpdal.core.executor import executor  # local import avoids module cycle
+
+            result = executor._run(
                 [str(self.pdal_path), "--version"],
-                capture_output=True,
-                text=True,
-                check=True,
-                creationflags=_SUBPROCESS_FLAGS,
+                action="version query",
+                check_version=False,
             )
-            version_output = result.stdout.strip()
-            logger.debug(f"PDAL version: {version_output}")
-            return version_output
-        except subprocess.CalledProcessError as e:
-            raise PDALNotFoundError(f"Failed to get PDAL version: {e}") from e
-        except FileNotFoundError as e:
-            raise PDALNotFoundError(f"PDAL executable not found: {e}") from e
+            if result.returncode != 0:
+                raise PDALNotFoundError(
+                    f"Failed to get PDAL version (exit {result.returncode}): {result.stderr}"
+                )
+            self._pdal_version = result.stdout.strip()
+            logger.debug(f"PDAL version: {self._pdal_version}")
+        return self._pdal_version
 
     def validate_pdal(self) -> bool:
         """Validate that PDAL is properly installed and accessible.
@@ -217,12 +241,38 @@ class Config:
         Raises:
             PDALNotFoundError: If PDAL cannot be found or validated
         """
+        version = self.get_pdal_version()
+        logger.info(f"PDAL validation successful: {version}")
+        return True
+
+    def check_pdal_version(self) -> None:
+        """Warn once if the detected PDAL version is below the supported floor.
+
+        Never raises; if the version cannot be fetched, the check is retried
+        on the next call.
+        """
+        if self._version_checked:
+            return
+
         try:
-            version = self.get_pdal_version()
-            logger.info(f"PDAL validation successful: {version}")
-            return True
-        except Exception as e:
-            raise PDALNotFoundError(f"PDAL validation failed: {e}") from e
+            version_output = self.get_pdal_version()
+        except PDALError:
+            logger.debug("Could not determine PDAL version; floor check skipped", exc_info=True)
+            return
+        self._version_checked = True
+
+        match = re.search(r"pdal\s+(\d+)\.(\d+)", version_output)
+        if match is None:
+            logger.debug(f"Could not parse PDAL version from: {version_output!r}")
+            return
+
+        version = (int(match.group(1)), int(match.group(2)))
+        if version < MIN_PDAL_VERSION:
+            logger.warning(
+                f"PDAL {version[0]}.{version[1]} is below the supported floor "
+                f"{MIN_PDAL_VERSION[0]}.{MIN_PDAL_VERSION[1]}; "
+                "some operations may behave differently or fail"
+            )
 
 
 # Global configuration instance
@@ -254,6 +304,15 @@ def set_verbose(verbose: bool) -> None:
         verbose: Enable verbose PDAL output
     """
     config.set_verbose(verbose)
+
+
+def set_timeout(timeout: float | None) -> None:
+    """Set timeout for PDAL subprocess calls.
+
+    Args:
+        timeout: Timeout in seconds, or None to disable (default)
+    """
+    config.set_timeout(timeout)
 
 
 def get_pdal_version() -> str:

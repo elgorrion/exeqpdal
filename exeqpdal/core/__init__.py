@@ -7,6 +7,7 @@ from exeqpdal.core.config import (
     get_pdal_path,
     get_pdal_version,
     set_pdal_path,
+    set_timeout,
     set_verbose,
     validate_pdal,
 )
@@ -21,6 +22,7 @@ __all__ = [
     "get_pdal_path",
     "get_pdal_version",
     "set_pdal_path",
+    "set_timeout",
     "set_verbose",
     "validate_pdal",
 ]

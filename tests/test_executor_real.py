@@ -164,24 +164,28 @@ class TestExecutorRealExecution:
 
     @pytest.mark.usefixtures("skip_if_no_pdal")
     def test_validate_pipeline_invalid(self) -> None:
-        """Test validation passes for structurally valid pipeline."""
+        """Test validation reports invalid for a pipeline without a reader."""
         pipeline_json = {
             "pipeline": [
-                {"type": "readers.las"},
+                {"type": "filters.range", "limits": "Z[0:100]"},
+                {"type": "writers.null"},
             ]
         }
 
         is_valid, is_streamable, message = executor.validate_pipeline(pipeline_json)
 
-        assert isinstance(is_valid, bool)
-        assert isinstance(is_streamable, bool)
-        assert isinstance(message, str)
+        assert is_valid is False
+        assert is_streamable is False
+        assert message != ""
 
     @pytest.mark.usefixtures("skip_if_no_pdal")
     def test_get_driver_info(self) -> None:
-        """Test driver info retrieval returns JSON."""
-        with pytest.raises(PDALExecutionError):
-            executor.get_driver_info("readers.las")
+        """Test driver info retrieval returns the parsed options structure."""
+        result = executor.get_driver_info("readers.las")
+
+        assert result["driver"] == "readers.las"
+        option_names = {opt["name"] for opt in result["options"]}
+        assert "filename" in option_names
 
     @pytest.mark.usefixtures("skip_if_no_pdal")
     def test_pdal_execution_error(self, tmp_path: Path) -> None:

@@ -21,8 +21,9 @@ debug issues, and ship a professional-quality package without relying on stale a
 
 ### 2.1 Requirements
 
-- **Python**: 3.12 (tested under `pyproject.toml`)
-- **PDAL CLI**: 2.5+ recommended. Integration tests use stages such as `filters.smrf`,
+- **Python**: 3.10+ (per `pyproject.toml` `requires-python`)
+- **PDAL CLI**: 2.8+ supported (a one-time warning is logged below that floor); tested
+  against 2.10. Integration tests use stages such as `filters.smrf`,
   `filters.python`, COPC readers/writers, and GDAL raster outputs.
 - **Operating systems**: Linux, macOS, Windows (QGIS bundle support implemented for Windows).
 - **Optional**: QGIS 3.40–3.44 on Windows for automatic PDAL discovery.
@@ -85,16 +86,16 @@ dist/                 # Local build artefacts (not committed upstream)
   2. `PATH` lookup (`shutil.which` / `which`).
   3. QGIS installation paths on Windows (`C:\Program Files\QGIS 3.4x\bin\pdal.exe`, `OSGEO4W` roots).
 - Public helpers: `set_pdal_path`, `get_pdal_path`, `get_pdal_version`, `validate_pdal`,
-  `set_verbose`.
+  `set_verbose`, `set_timeout`.
 - Raises `PDALNotFoundError` or `ConfigurationError` when discovery fails or the path is invalid.
 
 ### 4.2 `exeqpdal.core.executor`
 
 - Provides a single `Executor` instance (`executor`).
-- `execute_pipeline` writes pipeline JSON to a temp file, calls `pdal pipeline`, optionally collects
-  metadata, and cleans up files. Raises `PDALExecutionError` on non-zero return codes.
+- `execute_pipeline` passes pipeline JSON to `pdal pipeline --stdin` via standard input, optionally
+  collects metadata through a temporary file. Raises `PDALExecutionError` on non-zero return codes.
 - `execute_application` wraps invocations such as `pdal info` or `pdal translate`.
-- `validate_pipeline` runs `pdal pipeline --validate`.
+- `validate_pipeline` runs `pdal pipeline --stdin --validate`.
 - `get_driver_info` queries `pdal info --drivers`.
 
 ### 4.3 `exeqpdal.core.pipeline.Pipeline`
@@ -102,8 +103,9 @@ dist/                 # Local build artefacts (not committed upstream)
 - Accepts JSON, dict, list, or a terminal `Stage` instance.
 - `execute()` returns the processed point count (best-effort) and raises `PipelineError` on failure.
 - `validate()` returns `True` if the PDAL CLI reports success; stores streamability metadata.
-- `.metadata`, `.log`, and `.arrays` properties require a successful `.execute()` call.
-- `.arrays` is a planned feature and currently returns an empty list (see §11).
+- `.metadata` and `.log` properties require a successful `.execute()` call.
+- In-memory point arrays are out of scope for a CLI wrapper; use the official `pdal`
+  Python bindings when array access is required.
 
 ### 4.4 `exeqpdal.stages`
 
@@ -143,7 +145,7 @@ dist/                 # Local build artefacts (not committed upstream)
    - Chaining stages (`Reader.las(...) | Filter.range(...) | Writer.las(...)`), or
    - Providing a JSON string/dict/list of stage dictionaries.
 2. `Pipeline` walks backwards through the chained stages to assemble PDAL JSON.
-3. `Executor.execute_pipeline` writes JSON to disk, forms the CLI call, and captures stdout/stderr.
+3. `Executor.execute_pipeline` streams the JSON to `pdal pipeline --stdin` and captures stdout/stderr.
 4. Metadata (if produced) is parsed to derive the point count; stdout fallback is best-effort.
 5. `Pipeline` stores execution state (`_executed`, `_metadata`, `_log`).
 
@@ -151,7 +153,6 @@ dist/                 # Local build artefacts (not committed upstream)
 
 - Exceptions from the executor surface as `PipelineError`.
 - `Pipeline.validate()` does not mutate execution state; it reuses the same JSON.
-- `Pipeline.arrays` is a stub – the design allows future NumPy array extraction.
 - `Pipeline.is_streamable` defers to `validate()` when necessary.
 
 ---
@@ -278,8 +279,6 @@ except pdal.PipelineError as exc:
 
 ## 11. Known Gaps & Next Steps
 
-- **Array harvesting**: `Pipeline.arrays` is a placeholder. Options include reading PDAL-generated
-  numpy output, exposing PDAL’s pipeline writers, or removing the property until implemented.
 - **Stage coverage**: Factories cover the majority of core PDAL drivers but some niche readers,
   filters, and writers are missing. The recommended addition path is to extend the relevant factory
   module and add regression tests.
