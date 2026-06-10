@@ -38,7 +38,7 @@ from conftest import (
 
 import exeqpdal as pdal
 from exeqpdal import Pipeline
-from exeqpdal.exceptions import PDALExecutionError
+from exeqpdal.exceptions import PDALError
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -102,7 +102,7 @@ def test_raster_writer(
     # Execute
     try:
         point_count = pipeline.execute()
-    except PDALExecutionError as e:
+    except PDALError as e:
         handle_writer_exception(e, writer_name)
         return
 

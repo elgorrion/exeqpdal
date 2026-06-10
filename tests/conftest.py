@@ -6,11 +6,14 @@ import os
 import shutil
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 import pytest
 
-from exeqpdal.exceptions import PDALExecutionError
+from exeqpdal.exceptions import PDALError
 
 # LAZ / COPC test data constants
 DEFAULT_DATA_DIR = Path(__file__).parent / "test_data_laz"
@@ -42,6 +45,21 @@ def skip_if_no_test_data() -> None:
     """Skip tests if the packaged point cloud datasets are unavailable."""
     if not LAZ_DIR.exists():
         pytest.skip(f"Test data directory not available: {LAZ_DIR}")
+
+
+@pytest.fixture(autouse=True)
+def _cleanup_large_tmp_outputs(tmp_path: Path) -> Iterator[None]:
+    """Delete large per-test tmp outputs after each test.
+
+    Integration tests write multi-hundred-MB point cloud outputs; pytest keeps
+    every test's tmp directory for the whole session, which fills /tmp (and CI
+    runner disks) within a single run.
+    """
+    yield
+    if tmp_path.exists():
+        for path in tmp_path.rglob("*"):
+            if path.is_file() and path.stat().st_size > 1_000_000:
+                path.unlink()
 
 
 @pytest.fixture
@@ -294,7 +312,7 @@ def handle_writer_exception(e: Exception, writer_name: str) -> None:
         pytest.skip: For expected failures and configuration issues
         Exception: For actual failures (test should fail)
     """
-    if not isinstance(e, PDALExecutionError):
+    if not isinstance(e, PDALError):
         raise
 
     error_msg = str(e).lower()

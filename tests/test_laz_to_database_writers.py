@@ -33,7 +33,7 @@ from conftest import handle_writer_exception
 
 import exeqpdal as pdal
 from exeqpdal import Pipeline
-from exeqpdal.exceptions import PDALExecutionError
+from exeqpdal.exceptions import PDALError
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -85,7 +85,7 @@ def test_pgpointcloud_writer(
     # Execute
     try:
         point_count = pipeline.execute()
-    except PDALExecutionError as e:
+    except PDALError as e:
         handle_writer_exception(e, "pgpointcloud")
         return
 
@@ -131,7 +131,7 @@ def test_tiledb_writer(
     # Execute
     try:
         point_count = pipeline.execute()
-    except PDALExecutionError as e:
+    except PDALError as e:
         handle_writer_exception(e, "tiledb")
         return
 

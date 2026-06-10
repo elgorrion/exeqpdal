@@ -148,3 +148,6 @@ specs/
 tests/laz_to_writers/outputs/*
 !tests/laz_to_writers/outputs/.gitkeep
 !tests/laz_to_writers/outputs/README.md
+
+# Point cloud test data (fetched via scripts/fetch_test_data.py)
+tests/test_data_laz/*.laz

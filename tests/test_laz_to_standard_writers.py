@@ -39,7 +39,7 @@ from conftest import (
 
 import exeqpdal as pdal
 from exeqpdal import Pipeline
-from exeqpdal.exceptions import PDALExecutionError
+from exeqpdal.exceptions import PDALError
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -109,7 +109,7 @@ def test_standard_writer(
     # Execute
     try:
         point_count = pipeline.execute()
-    except PDALExecutionError as e:
+    except PDALError as e:
         handle_writer_exception(e, writer_name)
         return
 
@@ -139,7 +139,7 @@ def test_standard_writer(
 
             print(f"  ✓ Round-trip verified: {point_count2:,} points preserved")
 
-        except PDALExecutionError as e:
+        except PDALError as e:
             # Round-trip failure is not critical - just log
             print(f"  ⚠ Round-trip test skipped: {str(e)[:80]}")
 
@@ -157,7 +157,7 @@ def test_null_writer(
 
     try:
         point_count = pipeline.execute()
-    except PDALExecutionError as e:
+    except PDALError as e:
         handle_writer_exception(e, "null")
         return
 
