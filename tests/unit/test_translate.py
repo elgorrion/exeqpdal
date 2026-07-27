@@ -63,6 +63,19 @@ class TestTranslateOptions:
 
         assert captured_app["args"][-1] == "--filters.range.limits=Classification[2:2]"
 
+    def test_dims_application_option(self, captured_app: dict[str, Any]) -> None:
+        pdal.translate(
+            "input.las",
+            "output.las",
+            dims="X,Y,Z,Classification",
+        )
+
+        assert captured_app["args"] == [
+            "input.las",
+            "output.las",
+            "--dims=X,Y,Z,Classification",
+        ]
+
     def test_ambiguous_legacy_option_is_rejected(self, captured_app: dict[str, Any]) -> None:
         with pytest.raises(ValueError, match="stage_options"):
             pdal.translate("input.las", "output.las", writers_las_offset_x="auto")
@@ -106,3 +119,8 @@ class TestTranslateOptions:
         )
 
         assert captured_app["args"][-1] == "--writers.las.offset_x=auto"
+
+    def test_convert_forwards_dims(self, captured_app: dict[str, Any]) -> None:
+        pdal.convert("input.las", "output.las", dims="X,Y,Z")
+
+        assert captured_app["args"][-1] == "--dims=X,Y,Z"

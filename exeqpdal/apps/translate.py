@@ -22,6 +22,7 @@ def translate(
     filters: list[str] | None = None,
     reader: str | None = None,
     writer: str | None = None,
+    dims: str | None = None,
     stage_options: Mapping[str, object] | None = None,
     **options: Any,
 ) -> None:
@@ -33,6 +34,7 @@ def translate(
         filters: List of filter names to apply
         reader: Explicit reader type (e.g., 'readers.las')
         writer: Explicit writer type (e.g., 'writers.las')
+        dims: Dimensions to retain in the output
         stage_options: Exact dotted PDAL stage options, such as
             ``{"writers.las.offset_x": "auto"}``
         **options: Backward-compatible single-word stage options, such as
@@ -68,6 +70,9 @@ def translate(
         for filter_name in filters:
             args.extend(["--filter", filter_name])
 
+    if dims is not None:
+        args.append(f"--dims={dims}")
+
     args.extend(stage_option_args(stage_options, options))
 
     logger.info(f"Translating {input_file} to {output_file}")
@@ -79,6 +84,7 @@ def convert(
     input_file: str | Path,
     output_file: str | Path,
     *,
+    dims: str | None = None,
     stage_options: Mapping[str, object] | None = None,
     **options: Any,
 ) -> None:
@@ -87,10 +93,17 @@ def convert(
     Args:
         input_file: Input file path
         output_file: Output file path
+        dims: Dimensions to retain in the output
         stage_options: Exact dotted PDAL stage options
         **options: Translation options
 
     Raises:
         PDALExecutionError: If conversion fails
     """
-    translate(input_file, output_file, stage_options=stage_options, **options)
+    translate(
+        input_file,
+        output_file,
+        dims=dims,
+        stage_options=stage_options,
+        **options,
+    )
