@@ -5,9 +5,11 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
+from exeqpdal.apps._options import stage_option_args
 from exeqpdal.core.executor import executor
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
     from pathlib import Path
 
 logger = logging.getLogger(__name__)
@@ -16,17 +18,35 @@ logger = logging.getLogger(__name__)
 def merge(
     input_files: list[str | Path],
     output_file: str | Path,
+    *,
+    stage_options: Mapping[str, object] | None = None,
 ) -> None:
     """Merge multiple point cloud files into one.
 
     Args:
         input_files: List of input file paths
         output_file: Output file path
+        stage_options: Exact dotted PDAL stage options. Ordinary LAS/LAZ
+            outputs default to automatic X/Y/Z offsets; caller values override
+            those defaults.
 
     Raises:
         PDALExecutionError: If merge fails
     """
     args = [str(f) for f in input_files] + [str(output_file)]
+    output_name = str(output_file).lower()
+    is_las = output_name.endswith((".las", ".laz")) and not output_name.endswith(".copc.laz")
+
+    effective_options: dict[str, object] = {}
+    if is_las:
+        effective_options = {
+            "writers.las.offset_x": "auto",
+            "writers.las.offset_y": "auto",
+            "writers.las.offset_z": "auto",
+        }
+    if stage_options:
+        effective_options.update(stage_options)
+    args.extend(stage_option_args(effective_options))
 
     logger.info(f"Merging {len(input_files)} files to {output_file}")
     executor.execute_application("merge", args)

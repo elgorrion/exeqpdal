@@ -31,7 +31,7 @@ Thank you for your interest in contributing to `exeqpdal`! All contributions are
     ```bash
     ruff format .
     ruff check .
-    mypy exeqpdal
+    ty check exeqpdal
     pytest tests/
     ```
 
@@ -48,7 +48,7 @@ Thank you for your interest in contributing to `exeqpdal`! All contributions are
     ```bash
     ruff format .
     ruff check .
-    mypy exeqpdal
+    ty check exeqpdal
     pytest tests/
     ```
 
@@ -63,7 +63,7 @@ Thank you for your interest in contributing to `exeqpdal`! All contributions are
 ## Release Management
 
 Maintainers preparing a PyPI upload should follow the checklist in `docs/publishing.md`. It covers
-versioning, changelog updates, local validation (`ruff`, `mypy`, `pytest`, `python -m build`), and
+versioning, changelog updates, local validation (`ruff`, `ty`, `pytest`, `python -m build`), and
 the GitHub Actions workflow that publishes releases through PyPI's Trusted Publisher integration.
 
 ## Code Style

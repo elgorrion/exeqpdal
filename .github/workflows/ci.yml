@@ -35,8 +35,8 @@ jobs:
       - name: Ruff check
         run: ruff check .
 
-      - name: Mypy
-        run: mypy exeqpdal
+      - name: Ty
+        run: ty check exeqpdal
 
       - name: Pytest (unit)
         run: pytest -m "not integration" tests/

@@ -121,6 +121,23 @@ from exeqpdal import merge
 merge(["tile1.las", "tile2.las", "tile3.las"], "merged.las")
 ```
 
+Ordinary `.las` and `.laz` merge outputs use automatic X/Y/Z offsets so large projected
+coordinates remain representable. Override a writer value with its exact PDAL name when needed:
+
+```python
+merge(
+    ["tile1.las", "tile2.las"],
+    "merged.las",
+    stage_options={
+        "writers.las.offset_x": 33_200_000,
+        "writers.las.scale_x": 0.001,
+    },
+)
+```
+
+Automatic LAS offsets are not added for other output writers or `.copc.laz`. Explicit
+`stage_options` always pass through to PDAL and must target the active writer.
+
 ## Advanced Pipelines
 
 ### Building detection workflow

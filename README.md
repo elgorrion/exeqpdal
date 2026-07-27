@@ -13,7 +13,7 @@ coverage.
     factories chained with the `|` operator, then execute with `Pipeline`.
 -   **CLI-first design** – no native extensions; every operation delegates to the PDAL
     executable via `subprocess.run`.
--   **Strict typing** – the package ships `py.typed`, is developed under `mypy --strict`,
+-   **Strict typing** – the package ships `py.typed`, is checked with Astral `ty`,
     and exposes typed factory helpers.
 -   **Convenience apps** – wrappers for PDAL tools such as `info`, `translate`, `merge`, `sort`,
     `split`, `tile`, and `tindex`.
@@ -31,8 +31,8 @@ coverage.
 
 ## Installation
 
-The first public alpha will be published to PyPI using GitHub Actions. Once the release is
-live, you can install it directly (include `--pre` while the project is in alpha):
+The alpha series is published to PyPI using GitHub Actions. Install the current release directly
+(include `--pre` while the project is in alpha):
 
 ```bash
 pip install --pre exeqpdal
@@ -57,6 +57,23 @@ import exeqpdal as pdal
 
 pdal.translate("input.las", "output.laz")
 ```
+
+Application-stage options use their exact PDAL names through `stage_options`:
+
+```python
+pdal.translate(
+    "input.las",
+    "output.las",
+    stage_options={
+        "writers.las.scale_x": 0.001,
+        "writers.las.offset_x": "auto",
+    },
+)
+```
+
+Single-word options retain the convenience form, such as
+`filters_range_limits="Classification[2:2]"`. Use `stage_options` whenever a stage or option name
+contains an underscore.
 
 ### Filter Ground Points
 

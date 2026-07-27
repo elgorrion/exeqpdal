@@ -47,8 +47,8 @@ pip install -e ".[dev]"
 ruff format .
 ruff check .
 
-# Strict typing
-mypy exeqpdal
+# Static typing
+ty check exeqpdal
 
 # Tests – run full suite when PDAL + test datasets are available
 pytest tests/
@@ -195,8 +195,8 @@ High-level helpers live in `exeqpdal.apps` and mirror PDAL CLI semantics.
 | Function          | Underlying command                 | Notes |
 |-------------------|------------------------------------|-------|
 | `info`            | `pdal info`                        | Returns parsed JSON as `dict[str, Any]`. |
-| `translate`/`convert` | `pdal translate`               | Accepts `filters`, `reader`, `writer`, and stage-prefixed keyword options. |
-| `merge`           | `pdal merge`                       | Merges source files to a single output. |
+| `translate`/`convert` | `pdal translate`               | Accepts filters, explicit drivers, and exact `stage_options`. |
+| `merge`           | `pdal merge`                       | Merges inputs; LAS/LAZ outputs use automatic offsets. |
 | `split`           | `pdal split`                       | Supports length/capacity options. |
 | `tile`            | `pdal tile`                        | Handles length/origin/buffer arguments. |
 | `tindex`          | `pdal tindex create`               | Produces GeoJSON tile indexes. |
@@ -269,7 +269,7 @@ except pdal.PipelineError as exc:
   ```bash
   ruff format .
   ruff check .
-  mypy exeqpdal
+  ty check exeqpdal
   pytest tests/ -m "not integration"
   ```
 

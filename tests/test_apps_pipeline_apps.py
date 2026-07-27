@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+import exeqpdal as pdal
 from exeqpdal.apps import merge, split, tile, tindex
 
 if TYPE_CHECKING:
@@ -46,6 +47,63 @@ class TestMergeApp:
         merge([str(f) for f in dual_laz], str(output))
 
         assert output.exists()
+
+    @pytest.mark.integration
+    @pytest.mark.usefixtures("skip_if_no_pdal")
+    def test_merge_large_coordinates_uses_automatic_offsets(self, tmp_path: Path) -> None:
+        """Merge zone-prefixed coordinates that overflow a zero-offset LAS writer."""
+        first = tmp_path / "first.las"
+        second = tmp_path / "second.las"
+        output = tmp_path / "merged.las"
+
+        pdal.Pipeline(
+            pdal.Reader.faux(
+                count=2,
+                mode="ramp",
+                bounds="([33202000,33202001],[5939000,5939001],[100,101])",
+            )
+            | pdal.Writer.las(
+                str(first),
+                scale_x=0.01,
+                scale_y=0.01,
+                scale_z=0.01,
+                offset_x=33_202_000,
+                offset_y=5_939_000,
+                offset_z=100,
+            )
+        ).execute()
+        pdal.Pipeline(
+            pdal.Reader.faux(
+                count=2,
+                mode="ramp",
+                bounds="([33203000,33203001],[5939500,5939501],[110,111])",
+            )
+            | pdal.Writer.las(
+                str(second),
+                scale_x=0.02,
+                scale_y=0.02,
+                scale_z=0.02,
+                offset_x=33_203_000,
+                offset_y=5_939_500,
+                offset_z=110,
+            )
+        ).execute()
+
+        merge([first, second], output)
+
+        metadata = pdal.info(output, metadata=True)["metadata"]
+        bounds = pdal.get_bounds(output)
+        assert metadata["offset_x"] != 0
+        assert metadata["offset_y"] != 0
+        assert metadata["offset_z"] != 0
+        assert bounds == {
+            "minx": 33_202_000,
+            "miny": 5_939_000,
+            "minz": 100,
+            "maxx": 33_203_001,
+            "maxy": 5_939_501,
+            "maxz": 111,
+        }
 
 
 class TestSplitApp:

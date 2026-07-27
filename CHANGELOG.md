@@ -7,6 +7,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and
 
 ## [Unreleased]
 
+## [0.1.0a6] - 2026-07-27
+
 ### Removed
 - **Breaking:** `Pipeline.arrays` and the numpy dependency. exeqpdal drives the PDAL
   CLI and never materializes point data in memory; use the official
@@ -14,6 +16,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and
   The package now has no runtime dependencies.
 
 ### Changed
+- Static type checking and CI now use Astral `ty`.
+- Application stage options can use exact dotted PDAL names through the shared
+  `stage_options` mapping. Existing single-word underscore keywords remain supported;
+  ambiguous names now fail clearly.
 - Pipeline JSON is passed to `pdal pipeline --stdin` via standard input instead of a
   temporary file; all subprocess I/O is UTF-8 with replacement decoding, so non-UTF-8
   bytes in PDAL output can no longer crash a run.
@@ -47,6 +53,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and
   against a real `pdal --drivers` and the documented PDAL 2.10.1 stage set.
 
 ### Fixed
+- `merge()` now applies automatic X/Y/Z offsets to ordinary LAS/LAZ outputs, preventing
+  `int32` overflow for large projected coordinates while allowing explicit overrides.
+- `translate()` no longer replaces underscores inside PDAL option names such as
+  `offset_x`, `minor_version`, `dataformat_id`, and `a_srs`.
 - `Pipeline.execute()`/`validate()` again raise only their documented exception types
   (`PipelineError`/`ValidationError`) when PDAL is missing or broken.
 - A failed PDAL launch (missing, non-executable, or wrong-architecture binary) raises
@@ -99,7 +109,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and
 - Pytest suite covering pipeline assembly, stage factories, and application wrappers.
 - Integration tests gated by `@pytest.mark.integration` and the `EXEQPDAL_TEST_DATA` fixture
   directory.
-- Strict typing enforced via `mypy --strict`.
+- Strict static typing enforced in CI.
 
 ### Tooling
 - Added GitHub Actions for CI (`ci.yml`) and publishing (`publish.yml`), plus a release guide

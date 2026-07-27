@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import Any
+from typing import Any, cast
 
 from exeqpdal.core.executor import executor
 from exeqpdal.exceptions import PDALError, PipelineError, ValidationError
@@ -61,7 +61,7 @@ class Pipeline:
 
         elif isinstance(pipeline, dict):
             # Dictionary
-            self._pipeline_dict = pipeline
+            self._pipeline_dict = cast("dict[str, Any]", pipeline)
             self._pipeline_json = json.dumps(pipeline, indent=2)
 
         elif isinstance(pipeline, list):

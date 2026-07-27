@@ -63,12 +63,9 @@ nosetests.xml
 *.py,cover
 
 # Type Checkers & Linters
-.dmypy.json
-.mypy_cache/
 .pyre/
 .pytype/
 .ruff_cache/
-dmypy.json
 
 # Editor & IDE Settings
 .vscode/

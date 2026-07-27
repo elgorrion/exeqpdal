@@ -28,7 +28,7 @@ OIDC when the `publish` workflow runs.
 ```bash
 ruff format .
 ruff check .
-mypy exeqpdal
+ty check exeqpdal
 pytest -m "not integration" tests/
 # Optional: run full suite when PDAL + data are available
 pytest tests/

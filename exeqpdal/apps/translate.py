@@ -5,9 +5,11 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
+from exeqpdal.apps._options import stage_option_args
 from exeqpdal.core.executor import executor
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
     from pathlib import Path
 
 logger = logging.getLogger(__name__)
@@ -20,6 +22,7 @@ def translate(
     filters: list[str] | None = None,
     reader: str | None = None,
     writer: str | None = None,
+    stage_options: Mapping[str, object] | None = None,
     **options: Any,
 ) -> None:
     """Translate between point cloud formats.
@@ -30,7 +33,11 @@ def translate(
         filters: List of filter names to apply
         reader: Explicit reader type (e.g., 'readers.las')
         writer: Explicit writer type (e.g., 'writers.las')
-        **options: Filter/reader/writer options (prefix with stage name, e.g., filters_range_limits)
+        stage_options: Exact dotted PDAL stage options, such as
+            ``{"writers.las.offset_x": "auto"}``
+        **options: Backward-compatible single-word stage options, such as
+            ``filters_range_limits``. Use ``stage_options`` when any component
+            contains an underscore.
 
     Raises:
         PDALExecutionError: If translation fails
@@ -42,7 +49,8 @@ def translate(
         ...     "input.las",
         ...     "output.las",
         ...     filters=["range"],
-        ...     filters_range_limits="Classification[2:2]"
+        ...     filters_range_limits="Classification[2:2]",
+        ...     stage_options={"writers.las.offset_x": "auto"},
         ... )
     """
     args = [str(input_file), str(output_file)]
@@ -60,11 +68,7 @@ def translate(
         for filter_name in filters:
             args.extend(["--filter", filter_name])
 
-    # Add options
-    for key, value in options.items():
-        # Convert underscores to dots for PDAL options
-        option_name = key.replace("_", ".")
-        args.append(f"--{option_name}={value}")
+    args.extend(stage_option_args(stage_options, options))
 
     logger.info(f"Translating {input_file} to {output_file}")
     executor.execute_application("translate", args)
@@ -74,6 +78,8 @@ def translate(
 def convert(
     input_file: str | Path,
     output_file: str | Path,
+    *,
+    stage_options: Mapping[str, object] | None = None,
     **options: Any,
 ) -> None:
     """Convert between point cloud formats (alias for translate).
@@ -81,9 +87,10 @@ def convert(
     Args:
         input_file: Input file path
         output_file: Output file path
+        stage_options: Exact dotted PDAL stage options
         **options: Translation options
 
     Raises:
         PDALExecutionError: If conversion fails
     """
-    translate(input_file, output_file, **options)
+    translate(input_file, output_file, stage_options=stage_options, **options)
