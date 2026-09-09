@@ -25,7 +25,15 @@ Usage:
 
 from __future__ import annotations
 
-__version__ = "0.1.0a6"
+from importlib.metadata import PackageNotFoundError, version
+
+try:
+    __version__ = version("exeqpdal")
+except PackageNotFoundError:
+    # Source tree with no installed distribution: pyproject.toml owns the real
+    # version and there is no metadata to read it from.
+    __version__ = "0.0.0.dev0"
+
 __author__ = "ElGorrion"
 __license__ = "MIT"
 
