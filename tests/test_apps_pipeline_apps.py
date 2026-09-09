@@ -105,6 +105,73 @@ class TestMergeApp:
             "maxz": 111,
         }
 
+    @pytest.mark.integration
+    @pytest.mark.usefixtures("skip_if_no_pdal")
+    def test_merge_header_from_copies_reference_scales_and_offsets(self, tmp_path: Path) -> None:
+        """Merge writes the reference file's scales and offsets, not automatic ones."""
+        first = tmp_path / "first.las"
+        second = tmp_path / "second.las"
+        reference = tmp_path / "reference.las"
+        output = tmp_path / "merged.las"
+
+        for target, bounds, offsets in (
+            (
+                first,
+                "([33202000,33202001],[5939000,5939001],[100,101])",
+                (33_202_000, 5_939_000, 100),
+            ),
+            (
+                second,
+                "([33203000,33203001],[5939500,5939501],[110,111])",
+                (33_203_000, 5_939_500, 110),
+            ),
+        ):
+            pdal.Pipeline(
+                pdal.Reader.faux(count=2, mode="ramp", bounds=bounds)
+                | pdal.Writer.las(
+                    str(target),
+                    scale_x=0.01,
+                    scale_y=0.01,
+                    scale_z=0.01,
+                    offset_x=offsets[0],
+                    offset_y=offsets[1],
+                    offset_z=offsets[2],
+                )
+            ).execute()
+        pdal.Pipeline(
+            pdal.Reader.faux(
+                count=2,
+                mode="ramp",
+                bounds="([33202000,33202001],[5939000,5939001],[100,101])",
+            )
+            | pdal.Writer.las(
+                str(reference),
+                scale_x=0.005,
+                scale_y=0.0025,
+                scale_z=0.001,
+                offset_x=33_200_000,
+                offset_y=5_930_000,
+                offset_z=50,
+            )
+        ).execute()
+
+        merge([first, second], output, header_from=reference)
+
+        header_keys = ("scale_x", "scale_y", "scale_z", "offset_x", "offset_y", "offset_z")
+        merged = pdal.info(output, metadata=True)["metadata"]
+        expected = pdal.info(reference, metadata=True)["metadata"]
+        assert {key: merged[key] for key in header_keys} == {
+            key: expected[key] for key in header_keys
+        }
+        assert pdal.get_bounds(output) == {
+            "minx": 33_202_000,
+            "miny": 5_939_000,
+            "minz": 100,
+            "maxx": 33_203_001,
+            "maxy": 5_939_501,
+            "maxz": 111,
+        }
+
 
 class TestSplitApp:
     """Test split() application."""

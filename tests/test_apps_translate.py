@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from exeqpdal.apps import convert, translate
-from exeqpdal.exceptions import PDALExecutionError
+from exeqpdal.exceptions import PDALExecutionError, PipelineError
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -127,11 +127,14 @@ class TestTranslateAppRealExecution:
         """Test translate with nonexistent input file."""
         output = tmp_path / "output.las"
 
-        with pytest.raises(PDALExecutionError) as exc_info:
+        with pytest.raises(PipelineError) as exc_info:
             translate("/nonexistent/file.laz", str(output))
 
-        assert exc_info.value.returncode != 0
-        assert exc_info.value.stderr is not None
+        cause = exc_info.value.__cause__
+        assert isinstance(cause, PDALExecutionError)
+        assert cause.returncode != 0
+        assert cause.stderr
+        assert "/nonexistent/file.laz" in str(exc_info.value)
 
     @pytest.mark.usefixtures("skip_if_no_pdal")
     def test_translate_format_detection(self, small_laz: Path, tmp_path: Path) -> None:

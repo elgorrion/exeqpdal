@@ -8,7 +8,7 @@ import pytest
 
 import exeqpdal as pdal
 from exeqpdal import Pipeline
-from exeqpdal.exceptions import PipelineError
+from exeqpdal.exceptions import PDALExecutionError, PipelineError
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -94,7 +94,9 @@ class TestPipelineRealExecution:
         with pytest.raises(PipelineError) as exc_info:
             pipeline.execute()
 
-        assert "Pipeline execution failed" in str(exc_info.value)
+        assert isinstance(exc_info.value.__cause__, PDALExecutionError)
+        assert "PDAL: Unable to open stream" in str(exc_info.value)
+        assert "/nonexistent/file.laz" in str(exc_info.value)
 
 
 class TestPipelineValidation:

@@ -13,6 +13,8 @@ from typing import TYPE_CHECKING, Any
 
 import pytest
 
+import exeqpdal as pdal
+from exeqpdal.apps import pipeline as pipeline_app
 from exeqpdal.core.config import config
 from exeqpdal.core.executor import Executor, executor
 from exeqpdal.core.pipeline import Pipeline
@@ -236,29 +238,48 @@ class TestInfoParsers:
 
 @pytest.mark.usefixtures("quiet_config")
 class TestPipelineExceptionWrapping:
-    """Pipeline.execute()/validate() wrap any PDALError per their docstrings."""
+    """Pipeline execution and validation retain their documented error contracts."""
 
-    def test_execute_wraps_not_found(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_execute_preserves_not_found(self, monkeypatch: pytest.MonkeyPatch) -> None:
         def raise_not_found(*args: Any, **kwargs: Any) -> None:
             raise PDALNotFoundError("PDAL executable not found")
 
         monkeypatch.setattr(executor, "execute_pipeline", raise_not_found)
         pipeline = Pipeline(PIPELINE_JSON)
 
-        with pytest.raises(PipelineError) as exc_info:
+        with pytest.raises(PDALNotFoundError, match="PDAL executable not found"):
             pipeline.execute()
-        assert isinstance(exc_info.value.__cause__, PDALNotFoundError)
 
-    def test_validate_wraps_not_found(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_validate_preserves_not_found(self, monkeypatch: pytest.MonkeyPatch) -> None:
         def raise_not_found(*args: Any, **kwargs: Any) -> None:
             raise PDALNotFoundError("PDAL executable not found")
 
         monkeypatch.setattr(executor, "validate_pipeline", raise_not_found)
         pipeline = Pipeline(PIPELINE_JSON)
 
+        with pytest.raises(PDALNotFoundError, match="PDAL executable not found"):
+            pipeline.validate()
+
+    def test_is_streamable_preserves_not_found(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        def raise_not_found(*args: Any, **kwargs: Any) -> None:
+            raise PDALNotFoundError("PDAL executable not found")
+
+        monkeypatch.setattr(executor, "validate_pipeline", raise_not_found)
+        pipeline = Pipeline(PIPELINE_JSON)
+
+        with pytest.raises(PDALNotFoundError, match="PDAL executable not found"):
+            _ = pipeline.is_streamable
+
+    def test_validate_wraps_execution_error(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        def raise_execution_error(*args: Any, **kwargs: Any) -> None:
+            raise PDALExecutionError("PDAL pipeline validation failed", returncode=1)
+
+        monkeypatch.setattr(executor, "validate_pipeline", raise_execution_error)
+        pipeline = Pipeline(PIPELINE_JSON)
+
         with pytest.raises(ValidationError) as exc_info:
             pipeline.validate()
-        assert isinstance(exc_info.value.__cause__, PDALNotFoundError)
+        assert isinstance(exc_info.value.__cause__, PDALExecutionError)
 
     def test_validate_raises_on_invalid_verdict(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(
@@ -277,3 +298,107 @@ class TestPipelineExceptionWrapping:
 
         assert pipeline.validate() is True
         assert pipeline.is_streamable is False
+
+
+PUBLIC_CALLS = [
+    ("merge", lambda: pdal.merge(["input.las"], "output.las")),
+    ("translate", lambda: pdal.translate("input.las", "output.las")),
+    ("convert", lambda: pdal.convert("input.las", "output.las")),
+    ("sort", lambda: pdal.sort("input.las", "output.las")),
+    ("split", lambda: pdal.split("input.las", "output_#.las")),
+    ("tile", lambda: pdal.tile("input.las", "output_#.las")),
+    ("tindex", lambda: pdal.tindex(["input.las"], "index.json")),
+    ("pipeline", lambda: pipeline_app("pipeline.json")),
+    ("info", lambda: pdal.info("input.las")),
+    ("get_bounds", lambda: pdal.get_bounds("input.las")),
+    ("get_count", lambda: pdal.get_count("input.las")),
+    ("get_dimensions", lambda: pdal.get_dimensions("input.las")),
+    ("get_srs", lambda: pdal.get_srs("input.las")),
+    ("get_stats", lambda: pdal.get_stats("input.las")),
+    ("Pipeline.execute", lambda: Pipeline(PIPELINE_JSON).execute()),
+]
+
+
+@pytest.mark.usefixtures("quiet_config")
+@pytest.mark.parametrize("name, call", PUBLIC_CALLS, ids=[name for name, _ in PUBLIC_CALLS])
+class TestPublicExecutionErrors:
+    @pytest.mark.parametrize(
+        "stderr, expected_detail",
+        [
+            ("earlier line\n  coordinate overflow  \n\n ", ": coordinate overflow"),
+            (
+                "PDAL: previous diagnostic\nPDAL: filters.range: Invalid range expression 'bad'\n"
+                "\n(pdal translate Error)\n",
+                ": PDAL: filters.range: Invalid range expression 'bad'",
+            ),
+            (
+                "PDAL: filters.range: " + "x" * 250 + " END\n(pdal translate Error)\n",
+                ": PDAL: filters.range: " + "x" * 179,
+            ),
+            ("input.laz: " + "x" * 250 + " END\n", ": input.laz: " + "x" * 189),
+            ("", ""),
+            (" \n\t", ""),
+            (None, ""),
+        ],
+    )
+    def test_failure_includes_bounded_tail(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        name: str,
+        call: Any,
+        stderr: str | None,
+        expected_detail: str,
+    ) -> None:
+        def fail(*args: Any, **kwargs: Any) -> subprocess.CompletedProcess[str]:
+            return subprocess.CompletedProcess(args[0], 1, stdout="partial output", stderr=stderr)
+
+        monkeypatch.setattr(subprocess, "run", fail)
+        with pytest.raises(PipelineError) as caught:
+            call()
+        cause = caught.value.__cause__
+        assert isinstance(cause, PDALExecutionError)
+        assert cause.stderr == stderr
+        assert cause.stdout == "partial output"
+        assert cause.returncode == 1
+        assert cause.command
+        assert str(caught.value) == cause.message + expected_detail
+        assert "(pdal translate Error)" not in str(caught.value)
+        assert "END" not in str(caught.value)
+
+    def test_missing_executable_stays_distinct(
+        self, monkeypatch: pytest.MonkeyPatch, name: str, call: Any
+    ) -> None:
+        def missing(*args: Any, **kwargs: Any) -> None:
+            raise FileNotFoundError("missing PDAL")
+
+        monkeypatch.setattr(subprocess, "run", missing)
+        with pytest.raises(PDALNotFoundError, match="missing PDAL"):
+            call()
+
+    def test_timeout_includes_stderr(
+        self, monkeypatch: pytest.MonkeyPatch, name: str, call: Any
+    ) -> None:
+        def timeout(*args: Any, **kwargs: Any) -> None:
+            raise subprocess.TimeoutExpired(args[0], 5, stderr=b"timeout detail")
+
+        monkeypatch.setattr(subprocess, "run", timeout)
+        with pytest.raises(PipelineError, match="timeout detail") as caught:
+            call()
+        assert isinstance(caught.value.__cause__, PDALExecutionError)
+
+
+@pytest.mark.usefixtures("quiet_config")
+def test_info_invalid_json_uses_pipeline_error(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        subprocess,
+        "run",
+        lambda *a, **k: subprocess.CompletedProcess(
+            a[0], 0, stdout="not JSON", stderr="parser detail\n"
+        ),
+    )
+    with pytest.raises(PipelineError, match="parser detail") as caught:
+        pdal.info("input.las")
+    cause = caught.value.__cause__
+    assert isinstance(cause, PDALExecutionError)
+    assert cause.stdout == "not JSON"
+    assert isinstance(cause.__cause__, ValueError)

@@ -135,6 +135,7 @@ logs/
 
 # Workflow Automation
 .claude/
+.el-ledger.jsonl
 .gemini/
 .remote-workflow/
 docs/claude/
