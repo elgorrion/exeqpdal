@@ -234,11 +234,12 @@ pdal.set_pdal_path("C:\\Program Files\\QGIS 3.40\\bin\\pdal.exe")
 
 ### If you see this error:
 ```
-PipelineError: Pipeline execution failed: PDAL pipeline execution failed
+PipelineError: PDAL pipeline execution failed: PDAL: filters.range: Invalid range expression 'bad'
 ```
 
-**This means**: `Pipeline` called the PDAL CLI, which returned a non-zero exit status. The wrapped
-`PDALExecutionError` usually contains the precise CLI stderr explaining what went wrong.
+**This means**: `Pipeline` called the PDAL CLI, which returned a non-zero exit status. The text after
+the colon is PDAL's own diagnostic, shortened to 200 characters. The wrapped `PDALExecutionError` on
+`__cause__` carries the full stderr, stdout, return code, and command.
 
 ### Common causes and solutions:
 

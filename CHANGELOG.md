@@ -7,6 +7,25 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and
 
 ## [Unreleased]
 
+## [0.1.0a7] - 2026-09-09
+
+### Added
+- `merge(header_from=...)` copies LAS/LAZ scales and offsets without runtime
+  dependencies. Explicit stage options override these values. Other output formats
+  ignore `header_from`. An invalid LAS signature and invalid header lengths, scales,
+  and offsets raise `MetadataError`.
+
+### Changed
+- Public applications and `Pipeline.execute()` raise `PipelineError` for PDAL
+  execution failures. Messages prefer the last PDAL diagnostic and preserve its first
+  200 characters. Messages use the last non-empty line when no PDAL diagnostic exists.
+  The original `PDALExecutionError` remains available through `__cause__`.
+- `info()` surfaces unparseable PDAL output as `PipelineError` instead of
+  `PDALExecutionError`, like every other application helper.
+- `Pipeline.execute()`, `Pipeline.validate()`, and `Pipeline.is_streamable` let
+  `PDALNotFoundError` propagate unchanged, as applications do. `validate()` still
+  reports execution and parse failures as `ValidationError`.
+
 ## [0.1.0a6] - 2026-07-27
 
 ### Removed

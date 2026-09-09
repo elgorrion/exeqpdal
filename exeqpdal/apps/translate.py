@@ -6,6 +6,7 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from exeqpdal.apps._options import stage_option_args
+from exeqpdal.core._errors import pipeline_errors
 from exeqpdal.core.executor import executor
 
 if TYPE_CHECKING:
@@ -42,7 +43,8 @@ def translate(
             contains an underscore.
 
     Raises:
-        PDALExecutionError: If translation fails
+        PDALNotFoundError: If the PDAL executable cannot start
+        PipelineError: If translation fails
 
     Examples:
         >>> translate("input.las", "output.laz")
@@ -76,7 +78,8 @@ def translate(
     args.extend(stage_option_args(stage_options, options))
 
     logger.info(f"Translating {input_file} to {output_file}")
-    executor.execute_application("translate", args)
+    with pipeline_errors():
+        executor.execute_application("translate", args)
     logger.info("Translation completed")
 
 
@@ -98,7 +101,8 @@ def convert(
         **options: Translation options
 
     Raises:
-        PDALExecutionError: If conversion fails
+        PDALNotFoundError: If the PDAL executable cannot start
+        PipelineError: If conversion fails
     """
     translate(
         input_file,

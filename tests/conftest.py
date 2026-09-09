@@ -338,6 +338,7 @@ def handle_writer_exception(e: Exception, writer_name: str) -> None:
         "invalid option",
         "resolution",
         "no points",
+        "dimension not found",
     ]
 
     if any(pattern in error_msg for pattern in config_patterns):

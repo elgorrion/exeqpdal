@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from exeqpdal.apps import get_bounds, get_count, get_dimensions, get_srs, get_stats, info
-from exeqpdal.exceptions import PDALExecutionError
+from exeqpdal.exceptions import PDALExecutionError, PipelineError
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -103,11 +103,13 @@ class TestInfoAppRealExecution:
         """Test error handling for missing file."""
         nonexistent_file = tmp_path / "nonexistent.laz"
 
-        with pytest.raises(PDALExecutionError) as exc_info:
+        with pytest.raises(PipelineError) as exc_info:
             info(nonexistent_file)
 
-        assert exc_info.value.stderr is not None
-        assert len(exc_info.value.stderr) > 0
+        cause = exc_info.value.__cause__
+        assert isinstance(cause, PDALExecutionError)
+        assert cause.stderr
+        assert "nonexistent.laz" in str(exc_info.value)
 
     @pytest.mark.usefixtures("skip_if_no_pdal")
     def test_info_returns_dict(self, small_laz: Path) -> None:

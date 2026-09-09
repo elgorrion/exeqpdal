@@ -6,8 +6,9 @@ import json
 import logging
 from typing import Any, cast
 
+from exeqpdal.core._errors import pipeline_errors
 from exeqpdal.core.executor import executor
-from exeqpdal.exceptions import PDALError, PipelineError, ValidationError
+from exeqpdal.exceptions import PDALExecutionError, PipelineError, ValidationError
 from exeqpdal.stages.base import Stage
 
 logger = logging.getLogger(__name__)
@@ -140,8 +141,9 @@ class Pipeline:
 
         Raises:
             PipelineError: If pipeline execution fails
+            PDALNotFoundError: If the PDAL executable cannot start
         """
-        try:
+        with pipeline_errors():
             logger.info("Executing pipeline...")
             stdout, stderr, _returncode, metadata_dict = executor.execute_pipeline(
                 self._pipeline_json,
@@ -163,9 +165,6 @@ class Pipeline:
 
             logger.info(f"Pipeline executed successfully: {self._point_count} points")
             return self._point_count
-
-        except PDALError as e:
-            raise PipelineError(f"Pipeline execution failed: {e}") from e
 
     def _parse_metadata_count(self, metadata: dict[str, Any]) -> None:
         """Parse metadata to extract point count.
@@ -214,10 +213,11 @@ class Pipeline:
 
         Raises:
             ValidationError: If validation fails
+            PDALNotFoundError: If the PDAL executable cannot start
         """
         try:
             is_valid, is_streamable, message = executor.validate_pipeline(self._pipeline_json)
-        except PDALError as e:
+        except PDALExecutionError as e:
             raise ValidationError(f"Pipeline validation failed: {e}") from e
 
         self._is_streamable = is_streamable
@@ -264,7 +264,8 @@ class Pipeline:
             True if pipeline is streamable
 
         Raises:
-            PipelineError: If pipeline hasn't been validated
+            ValidationError: If validation fails
+            PDALNotFoundError: If the PDAL executable cannot start
         """
         if self._is_streamable is None:
             self.validate()

@@ -3,16 +3,39 @@
 from __future__ import annotations
 
 import logging
+import math
+import struct
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from exeqpdal.apps._options import stage_option_args
+from exeqpdal.core._errors import pipeline_errors
 from exeqpdal.core.executor import executor
+from exeqpdal.exceptions import MetadataError
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
-    from pathlib import Path
 
 logger = logging.getLogger(__name__)
+
+
+def _las_header_options(filename: str | Path) -> dict[str, float]:
+    """Read scales and offsets from the uncompressed LAS/LAZ header."""
+    # LAS 1.4 R15, section 2.4 (Public Header Block), also shared by LAS 1.0-1.3.
+    with Path(filename).open("rb") as source:
+        header = source.read(227)
+    if len(header) < 227:
+        raise MetadataError(f"Truncated LAS header in {filename}: expected at least 227 bytes")
+    if header[:4] != b"LASF":
+        raise MetadataError(f"Invalid LAS signature in {filename}: expected LASF")
+    values = struct.unpack_from("<6d", header, 131)
+    names = ("scale_x", "scale_y", "scale_z", "offset_x", "offset_y", "offset_z")
+    options: dict[str, float] = {}
+    for name, value in zip(names, values, strict=True):
+        if not math.isfinite(value) or (name.startswith("scale_") and value <= 0):
+            raise MetadataError(f"Invalid LAS {name} in {filename}: {value}")
+        options[f"writers.las.{name}"] = value
+    return options
 
 
 def merge(
@@ -20,6 +43,7 @@ def merge(
     output_file: str | Path,
     *,
     stage_options: Mapping[str, object] | None = None,
+    header_from: str | Path | None = None,
 ) -> None:
     """Merge multiple point cloud files into one.
 
@@ -27,11 +51,17 @@ def merge(
         input_files: List of input file paths
         output_file: Output file path
         stage_options: Exact dotted PDAL stage options. Ordinary LAS/LAZ
-            outputs default to automatic X/Y/Z offsets; caller values override
-            those defaults.
+            outputs default to automatic X/Y/Z offsets. Caller values override
+            those defaults and header_from values.
+        header_from: LAS/LAZ file whose scales and offsets apply to ordinary
+            LAS/LAZ outputs. Other output formats ignore this parameter.
 
     Raises:
-        PDALExecutionError: If merge fails
+        PDALNotFoundError: If the PDAL executable cannot start
+        PipelineError: If merge fails
+        MetadataError: If header_from has an invalid signature, header length,
+            scale, or offset
+        OSError: If header_from cannot be read
     """
     args = [str(f) for f in input_files] + [str(output_file)]
     output_name = str(output_file).lower()
@@ -44,12 +74,15 @@ def merge(
             "writers.las.offset_y": "auto",
             "writers.las.offset_z": "auto",
         }
+        if header_from is not None:
+            effective_options.update(_las_header_options(header_from))
     if stage_options:
         effective_options.update(stage_options)
     args.extend(stage_option_args(effective_options))
 
     logger.info(f"Merging {len(input_files)} files to {output_file}")
-    executor.execute_application("merge", args)
+    with pipeline_errors():
+        executor.execute_application("merge", args)
     logger.info("Merge completed")
 
 
@@ -69,7 +102,8 @@ def sort(
         metadata: Forward metadata (VLRs, header entries) from previous stages
 
     Raises:
-        PDALExecutionError: If sort fails
+        PDALNotFoundError: If the PDAL executable cannot start
+        PipelineError: If sort fails
     """
     args = [str(input_file), str(output_file)]
 
@@ -80,7 +114,8 @@ def sort(
         args.append("--metadata")
 
     logger.info(f"Sorting {input_file} to {output_file}")
-    executor.execute_application("sort", args)
+    with pipeline_errors():
+        executor.execute_application("sort", args)
     logger.info("Sort completed")
 
 
@@ -100,7 +135,8 @@ def split(
         capacity: Split by point count
 
     Raises:
-        PDALExecutionError: If split fails
+        PDALNotFoundError: If the PDAL executable cannot start
+        PipelineError: If split fails
 
     Examples:
         >>> split("input.las", "output_#.las", capacity=100000)
@@ -114,7 +150,8 @@ def split(
         args.extend(["--capacity", str(capacity)])
 
     logger.info(f"Splitting {input_file} to {output_pattern}")
-    executor.execute_application("split", args)
+    with pipeline_errors():
+        executor.execute_application("split", args)
     logger.info("Split completed")
 
 
@@ -138,7 +175,8 @@ def tile(
         buffer: Buffer around tiles (meters)
 
     Raises:
-        PDALExecutionError: If tiling fails
+        PDALNotFoundError: If the PDAL executable cannot start
+        PipelineError: If tiling fails
 
     Examples:
         >>> tile("input.las", "tiles/tile_#.las", length=100.0)
@@ -158,7 +196,8 @@ def tile(
         args.extend(["--buffer", str(buffer)])
 
     logger.info(f"Tiling {input_file} to {output_pattern}")
-    executor.execute_application("tile", args)
+    with pipeline_errors():
+        executor.execute_application("tile", args)
     logger.info("Tiling completed")
 
 
@@ -180,7 +219,8 @@ def tindex(
         fast_boundary: Use fast boundary computation
 
     Raises:
-        PDALExecutionError: If tindex creation fails
+        PDALNotFoundError: If the PDAL executable cannot start
+        PipelineError: If tindex creation fails
     """
     args = ["create", "--tindex", str(output_file), "-f", "GeoJSON"] + [str(f) for f in input_files]
 
@@ -194,7 +234,8 @@ def tindex(
         args.append("--fast_boundary")
 
     logger.info(f"Creating tile index from {len(input_files)} files")
-    executor.execute_application("tindex", args)
+    with pipeline_errors():
+        executor.execute_application("tindex", args)
     logger.info("Tile index created")
 
 
@@ -212,7 +253,8 @@ def pipeline(
         stream: Force stream mode (True) or standard mode (False)
 
     Raises:
-        PDALExecutionError: If pipeline execution fails
+        PDALNotFoundError: If the PDAL executable cannot start
+        PipelineError: If pipeline execution fails
     """
     args = [str(pipeline_file)]
 
@@ -225,5 +267,6 @@ def pipeline(
         args.append("--nostream")
 
     logger.info(f"Executing pipeline from {pipeline_file}")
-    executor.execute_application("pipeline", args)
+    with pipeline_errors():
+        executor.execute_application("pipeline", args)
     logger.info("Pipeline executed")

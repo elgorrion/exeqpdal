@@ -6,6 +6,7 @@ import json
 import logging
 from typing import TYPE_CHECKING, Any, cast
 
+from exeqpdal.core._errors import pipeline_errors
 from exeqpdal.core.executor import executor
 from exeqpdal.exceptions import MetadataError, PDALExecutionError
 
@@ -46,7 +47,8 @@ def info(
         Dictionary with file information
 
     Raises:
-        PDALExecutionError: If info command fails
+        PDALNotFoundError: If the PDAL executable cannot start
+        PipelineError: If info command fails
     """
     args = [str(filename)]
 
@@ -70,18 +72,19 @@ def info(
         args.append("--pointcloudschema")
 
     logger.info(f"Getting info for: {filename}")
-    stdout, stderr, _ = executor.execute_application("info", args)
+    with pipeline_errors():
+        stdout, stderr, _ = executor.execute_application("info", args)
 
-    try:
-        result = json.loads(stdout)
-        logger.debug(f"Info result: {len(stdout)} bytes")
-        return cast("dict[str, Any]", result)
-    except json.JSONDecodeError as e:
-        raise PDALExecutionError(
-            f"Failed to parse info output: {e}",
-            stdout=stdout,
-            stderr=stderr,
-        ) from e
+        try:
+            result = json.loads(stdout)
+            logger.debug(f"Info result: {len(stdout)} bytes")
+            return cast("dict[str, Any]", result)
+        except json.JSONDecodeError as e:
+            raise PDALExecutionError(
+                f"Failed to parse info output: {e}",
+                stdout=stdout,
+                stderr=stderr,
+            ) from e
 
 
 def get_bounds(filename: str | Path) -> dict[str, float]:
@@ -94,7 +97,9 @@ def get_bounds(filename: str | Path) -> dict[str, float]:
         Dictionary with bounds (minx, miny, minz, maxx, maxy, maxz)
 
     Raises:
+        PDALNotFoundError: If the PDAL executable cannot start
         MetadataError: If the PDAL info output contains no bounds
+        PipelineError: If the info command fails
     """
     result = info(filename, summary=True)
     bounds = result.get("summary", {}).get("bounds")
@@ -113,7 +118,9 @@ def get_count(filename: str | Path) -> int:
         Number of points in file
 
     Raises:
+        PDALNotFoundError: If the PDAL executable cannot start
         MetadataError: If the PDAL info output contains no point count
+        PipelineError: If the info command fails
     """
     result = info(filename, summary=True)
     count = result.get("summary", {}).get("num_points")
@@ -130,6 +137,10 @@ def get_dimensions(filename: str | Path) -> list[str]:
 
     Returns:
         List of dimension names
+
+    Raises:
+        PDALNotFoundError: If the PDAL executable cannot start
+        PipelineError: If the info command fails
     """
     result = info(filename, schema=True)
     schema = result.get("schema", {}).get("dimensions", [])
@@ -144,6 +155,10 @@ def get_srs(filename: str | Path) -> str:
 
     Returns:
         SRS string (WKT format)
+
+    Raises:
+        PDALNotFoundError: If the PDAL executable cannot start
+        PipelineError: If the info command fails
     """
     result = info(filename, metadata=True)
     metadata = result.get("metadata", {})
@@ -158,6 +173,10 @@ def get_stats(filename: str | Path) -> dict[str, Any]:
 
     Returns:
         Dictionary with dimension statistics
+
+    Raises:
+        PDALNotFoundError: If the PDAL executable cannot start
+        PipelineError: If the info command fails
     """
     result = info(filename, stats=True)
     return cast("dict[str, Any]", result.get("stats", {}))

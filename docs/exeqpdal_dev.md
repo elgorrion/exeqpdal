@@ -202,7 +202,9 @@ High-level helpers live in `exeqpdal.apps` and mirror PDAL CLI semantics.
 | `tindex`          | `pdal tindex create`               | Produces GeoJSON tile indexes. |
 | `pipeline_app`    | `pdal pipeline`                    | Executes or validates pipelines stored on disk. |
 
-All wrappers raise `PDALExecutionError` if PDAL exits with a non-zero status.
+All wrappers raise `PipelineError` if PDAL exits with a non-zero status; the message carries the
+PDAL diagnostic and the original `PDALExecutionError` stays available through `__cause__`. A PDAL
+executable that cannot start raises `PDALNotFoundError` unchanged.
 
 ---
 
@@ -233,11 +235,13 @@ Verbose mode (`set_verbose(True)`) appends `--verbose 8` to every CLI invocation
 
 - Prefer catching `PipelineError` around `Pipeline.execute()` and `ValidationError` around
   `Pipeline.validate()`.
-- Application helper failures propagate `PDALExecutionError`.
+- Application helper failures raise `PipelineError` with the PDAL diagnostic in the message; read
+  `__cause__` for the full `PDALExecutionError` (return code, stdout, stderr, command).
 - `PDALNotFoundError` signals discovery issues – surfaced by `get_pdal_path`, `get_pdal_version`,
-  and `validate_pdal`.
+  and `validate_pdal`, and propagated unchanged by every application helper, `Pipeline.execute()`,
+  `Pipeline.validate()`, and `Pipeline.is_streamable`.
 - Distinguish between configuration missteps (`ConfigurationError`) and runtime CLI failures
-  (`PDALExecutionError`) when surfacing errors to callers.
+  (`PipelineError`) when surfacing errors to callers.
 
 Example:
 
@@ -284,8 +288,6 @@ except pdal.PipelineError as exc:
   module and add regression tests.
 - **Metadata parsing**: Point counts are derived from metadata when present. Additional parsing may
   be required for complex pipelines or when PDAL emits counts only in stdout.
-- **Error messages**: Surface more of `PDALExecutionError.stdout/stderr` through `PipelineError` to
-  aid troubleshooting.
 - **Packaging**: The upload workflow (e.g., `twine`) has not yet been scripted; manual verification
   is required (`python -m build`, `twine check dist/*`).
 
