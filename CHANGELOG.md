@@ -7,6 +7,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and
 
 ## [Unreleased]
 
+## [0.1.0a7] - 2026-09-09
+
 ### Added
 - `merge(header_from=...)` copies LAS/LAZ scales and offsets without runtime
   dependencies. Explicit stage options override these values. Other output formats
