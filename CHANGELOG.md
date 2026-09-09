@@ -7,6 +7,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and
 
 ## [Unreleased]
 
+## [0.1.0a8] - 2026-09-09
+
 ### Fixed
 - `exeqpdal.__version__` reads the installed distribution metadata instead of a
   second, hand-maintained copy of the version. `pyproject.toml` is now the only
