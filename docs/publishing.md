@@ -18,6 +18,8 @@ OIDC when the `publish` workflow runs.
 ## 2. Prepare the release
 
 1. Update `pyproject.toml` with the new version (use PEP 440-compliant tags—`0.1.0a2`, etc.).
+   This is the only place the version is written: `exeqpdal.__version__` reads the installed
+   distribution metadata, so never hand-edit it.
 2. Move the relevant entries in `CHANGELOG.md` from `Unreleased` to a dated release section.
 3. Ensure `README.md` reflects the current installation instructions.
 4. Commit these changes with a Conventional Commit message such as
