@@ -361,9 +361,26 @@ class TestPublicExecutionErrors:
         assert cause.stdout == "partial output"
         assert cause.returncode == 1
         assert cause.command
-        assert str(caught.value) == cause.message + expected_detail
-        assert "(pdal translate Error)" not in str(caught.value)
-        assert "END" not in str(caught.value)
+        error = caught.value
+        assert error.message == cause.message + expected_detail
+        assert "(pdal translate Error)" not in error.message
+        assert "END" not in error.message
+        assert error.returncode == 1
+        assert error.stdout == "partial output"
+        assert error.stderr == stderr
+        assert error.command == cause.command
+        text = str(error)
+        lines = text.splitlines()
+        assert lines[0] == error.message
+        assert lines[1] == "Return code: 1"
+        assert lines[2] == "STDOUT: partial output"
+        command_line = f"Command: {' '.join(cause.command)}"
+        if name == "Pipeline.execute":
+            assert error.pipeline_json == Pipeline(PIPELINE_JSON)._pipeline_json
+            assert text.endswith(f"{command_line}\nPipeline: {error.pipeline_json}")
+        else:
+            assert error.pipeline_json is None
+            assert lines[-1] == command_line
 
     def test_missing_executable_stays_distinct(
         self, monkeypatch: pytest.MonkeyPatch, name: str, call: Any
@@ -402,3 +419,50 @@ def test_info_invalid_json_uses_pipeline_error(monkeypatch: pytest.MonkeyPatch) 
     assert isinstance(cause, PDALExecutionError)
     assert cause.stdout == "not JSON"
     assert isinstance(cause.__cause__, ValueError)
+
+
+@pytest.mark.parametrize(
+    "returncode, expected",
+    [
+        (
+            3221226505,
+            "Return code: 3221226505 (pdal.exe crashed: fast-fail / stack buffer overrun (0xC0000409))",
+        ),
+        (-1073741819, "Return code: -1073741819 (pdal.exe crashed: access violation (0xC0000005))"),
+        (0xC00000FD, "Return code: 3221225725 (pdal.exe crashed: stack overflow (0xC00000FD))"),
+        (0xC0000135, "Return code: 3221225781 (pdal.exe crashed: DLL not found (0xC0000135))"),
+        (0xC0000001, "Return code: 3221225473 (pdal.exe crashed: NTSTATUS (0xC0000001))"),
+        (1, "Return code: 1"),
+        (139, "Return code: 139"),
+    ],
+)
+def test_pipeline_error_names_windows_crash_codes(returncode: int, expected: str) -> None:
+    error = PipelineError("PDAL pipeline execution failed", returncode=returncode)
+    assert str(error) == f"PDAL pipeline execution failed\n{expected}"
+
+
+@pytest.mark.usefixtures("quiet_config")
+def test_pipeline_execute_crash_report_carries_everything(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def crash(*args: Any, **kwargs: Any) -> subprocess.CompletedProcess[str]:
+        return subprocess.CompletedProcess(args[0], 3221226505, stdout="", stderr="")
+
+    monkeypatch.setattr(subprocess, "run", crash)
+    pipeline = Pipeline(PIPELINE_JSON)
+    with pytest.raises(PipelineError) as caught:
+        pipeline.execute()
+    error = caught.value
+    assert error.message == "PDAL pipeline execution failed"
+    assert error.pipeline_json == pipeline._pipeline_json
+    assert str(error) == (
+        "PDAL pipeline execution failed\n"
+        "Return code: 3221226505 "
+        "(pdal.exe crashed: fast-fail / stack buffer overrun (0xC0000409))\n"
+        f"Command: {' '.join(error.command or [])}\n"
+        f"Pipeline: {pipeline._pipeline_json}"
+    )
+
+
+def test_pipeline_error_message_only_keeps_short_form() -> None:
+    assert str(PipelineError("Invalid JSON pipeline")) == "Invalid JSON pipeline"

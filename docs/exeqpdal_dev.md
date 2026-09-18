@@ -235,8 +235,11 @@ Verbose mode (`set_verbose(True)`) appends `--verbose 8` to every CLI invocation
 
 - Prefer catching `PipelineError` around `Pipeline.execute()` and `ValidationError` around
   `Pipeline.validate()`.
-- Application helper failures raise `PipelineError` with the PDAL diagnostic in the message; read
-  `__cause__` for the full `PDALExecutionError` (return code, stdout, stderr, command).
+- Application helper failures raise `PipelineError` with the PDAL diagnostic in the message and
+  the return code, stdout, stderr, and command as attributes; `Pipeline.execute()` adds
+  `pipeline_json`. `str()` prints all of them after the message, and a Windows NTSTATUS return
+  code is named (`pdal.exe crashed: access violation (0xC0000005)`). The original
+  `PDALExecutionError` stays available through `__cause__`.
 - `PDALNotFoundError` signals discovery issues – surfaced by `get_pdal_path`, `get_pdal_version`,
   and `validate_pdal`, and propagated unchanged by every application helper, `Pipeline.execute()`,
   `Pipeline.validate()`, and `Pipeline.is_streamable`.
