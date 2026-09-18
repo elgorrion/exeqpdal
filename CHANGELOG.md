@@ -7,6 +7,19 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and
 
 ## [Unreleased]
 
+## [0.1.0a9] - 2026-09-18
+
+### Fixed
+- `PipelineError` raised for an execution failure carries `returncode`,
+  `stdout`, `stderr`, `command`, and, for `Pipeline.execute()`, the
+  `pipeline_json` that PDAL ran; `str()` prints them after the message in
+  that order. Since 0.1.0a7 the message alone reached the caller, so a field
+  crash reported nothing beyond one stderr line. A Windows NTSTATUS return
+  code (negative or above `0x7FFFFFFF`) is named in the return code line, for
+  example `pdal.exe crashed: fast-fail / stack buffer overrun (0xC0000409)`;
+  access violation, stack overflow, and DLL not found are named as well.
+  Nothing is truncated; the consumer's log holds the report.
+
 ## [0.1.0a8] - 2026-09-09
 
 ### Fixed

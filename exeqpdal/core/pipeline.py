@@ -143,7 +143,7 @@ class Pipeline:
             PipelineError: If pipeline execution fails
             PDALNotFoundError: If the PDAL executable cannot start
         """
-        with pipeline_errors():
+        with pipeline_errors(pipeline_json=self._pipeline_json):
             logger.info("Executing pipeline...")
             stdout, stderr, _returncode, metadata_dict = executor.execute_pipeline(
                 self._pipeline_json,

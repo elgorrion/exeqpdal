@@ -12,8 +12,12 @@ if TYPE_CHECKING:
 
 
 @contextmanager
-def pipeline_errors() -> Iterator[None]:
-    """Raise PipelineError with the last PDAL diagnostic or non-empty stderr line."""
+def pipeline_errors(pipeline_json: str | None = None) -> Iterator[None]:
+    """Raise PipelineError carrying the execution failure's full diagnostics.
+
+    The message ends with the last PDAL diagnostic or non-empty stderr line;
+    return code, output, command line, and ``pipeline_json`` ride along.
+    """
     try:
         yield
     except PDALExecutionError as error:
@@ -24,4 +28,11 @@ def pipeline_errors() -> Iterator[None]:
                 (line for line in reversed(lines) if line.startswith("PDAL")), lines[-1]
             )
             message += f": {diagnostic[:200]}"
-        raise PipelineError(message) from error
+        raise PipelineError(
+            message,
+            returncode=error.returncode,
+            stdout=error.stdout,
+            stderr=error.stderr,
+            command=error.command,
+            pipeline_json=pipeline_json,
+        ) from error
